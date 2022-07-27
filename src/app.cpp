@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 #include "app.h"
+#include "render_system.h"
+#include "input_system.h"
 
 GEngine::CApp::CApp()
 {
@@ -12,20 +14,21 @@ GEngine::CApp::~CApp()
 
 GLvoid GEngine::CApp::Init()
 {
-  std::cout << "capp init!\n";
-  auto window = std::make_shared<CGLFWWindow>();
-  window->Init();
-  window_ = window->GetWindow();
+  std::cout << "CApp init!\n";
+  CSingleton<CRenderSystem>()->GetOrCreateWindow()->Init();
+  window_ = CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow();
+  CSingleton<CRenderSystem>()->Init();
+  CSingleton<CInputSystem>()->Init();
 }
 
 GLvoid GEngine::CApp::RunMainLoop() {
-  glClearColor(0.5f, 0.0f, 0.0f, 1.0f);
-while(!glfwWindowShouldClose(window_)){
-  glfwPollEvents();
-  glClear(GL_COLOR_BUFFER_BIT);
-  glfwSwapBuffers(window_);
-}
-
+  glClearColor(0.3f, 0.0f, 0.0f, 1.0f);
+  while (!glfwWindowShouldClose(window_)) {
+    CalculateTime();
+    glClear(GL_COLOR_BUFFER_BIT);
+    glfwPollEvents();
+    glfwSwapBuffers(window_);
+  }
 }
 
 void GEngine::CApp::CalculateTime() {

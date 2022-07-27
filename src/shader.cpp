@@ -1,4 +1,3 @@
-#pragma once
 #include "shader.h"
 
 GEngine::CShader::CShader(
@@ -78,7 +77,7 @@ GEngine::CShader::CShader(
     glDeleteShader(geometry);
 }
 
-void GEngine::CShader::UseProgram() const { glUseProgram(shader_program_ID_); }
+void GEngine::CShader::Use() const { glUseProgram(shader_program_ID_); }
 
 void GEngine::CShader::SetBool(const std::string &name, bool value) const {
   glUniform1i(glGetUniformLocation(shader_program_ID_, name.c_str()), (int)value);

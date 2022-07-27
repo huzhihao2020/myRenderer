@@ -24,12 +24,13 @@ public:
   float move_speed_;
   float mouse_sensitivity_;
 
-  CCamera(glm::vec3 position, float fov);
+  CCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f), float fov = 45.0f);
   ~CCamera();
 
   void Init();
   glm::mat4 GetViewMatrix() const;
   glm::mat4 GetProjectionMatrix() const;
+  float GetFOV() const;
 
 //  void ProcessKeyboard(CameraMovement direction, float deltaTime);
 //  void ProcessMouseMovement(float xoffset, float yoffset,
@@ -39,11 +40,15 @@ public:
 private:
   // calculates the front vector from the Camera's (updated) Euler Angles
   void UpdateCameraVectors();
+
+  void ProcessCursorPosCallback(double pos_x, double pos_y);
+
   glm::vec3 world_up_ = glm::vec3(0.0f, 1.0f, 0.0f);
   float fov_;
   float near_;
   float far_;
   bool is_ortho_;
+  bool is_cursor_disabled_;
 };
 
 } // namespace GEngine

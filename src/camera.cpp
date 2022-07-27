@@ -1,6 +1,8 @@
 #include "camera.h"
 #include "common.h"
 #include <iostream>
+#include "input_system.h"
+
 GEngine::CCamera::CCamera(glm::vec3 position, float fov)
     : front_(glm::vec3(0.0f, 0.0f, -1.0f)),
       move_speed_(5.0f),
@@ -24,16 +26,33 @@ GEngine::CCamera::~CCamera()
 void GEngine::CCamera::Init() {
   std::cout << "Camera Init!\n"; 
   // register callback
+  CSingleton<CInputSystem>()->RegisterCursorPosCallBackFunction(
+      std::bind(&CCamera::ProcessCursorPosCallback,
+                this,
+                std::placeholders::_1,
+                std::placeholders::_2));
+}
+
+void GEngine::CCamera::ProcessCursorPosCallback(double pos_x, double pos_y) {
+  std::cout << "CursorPosCallBackFunction Called\n";
+  if(is_cursor_disabled_) {
+    return;
+  }
 }
 
 glm::mat4 GEngine::CCamera::GetViewMatrix() const {
   return glm::lookAt(position_, position_ + front_, world_up_);
 }
+
 glm::mat4 GEngine::CCamera::GetProjectionMatrix() const {
   return is_ortho_ ? glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f)
                    : glm::perspective(glm::radians(fov_),
                          static_cast<float>(GEngine::WINDOW_CONFIG::VIEWPORT_WIDTH) / static_cast<float>(GEngine::WINDOW_CONFIG::VIEWPORT_HEIGHT),
                          near_, far_);
+}
+
+float GEngine::CCamera::GetFOV() const {
+  return fov_;
 }
 
 // // processes input received from any keyboard-like input system. Accepts input

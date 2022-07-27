@@ -4,10 +4,13 @@
 
 // for test
 
-int main() {
+void TestScene() {
 
-  std::cout << "hello!\n";
-  GEngine::CApp::Instance().Init();
-  GEngine::CApp::Instance().RunMainLoop();
+}
+
+int main() {
+  std::cout << "Hello!\n";
+  GEngine::CSingleton<GEngine::CApp>()->Init();
+  GEngine::CSingleton<GEngine::CApp>()->RunMainLoop();
   return 0;
 }

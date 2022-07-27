@@ -9,7 +9,7 @@ public:
   ~CGLFWWindow();
 
   void Init();
-  GLFWwindow *GetWindow() const;
+  GLFWwindow *GetGLFWwindow() const;
 
 private:
   void SetViewport();
