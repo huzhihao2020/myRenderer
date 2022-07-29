@@ -27,6 +27,7 @@ void GEngine::CGLFWWindow::Init() {
   }
   glfwMakeContextCurrent(window_);
   glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(window_, GLFW_STICKY_KEYS, GLFW_TRUE);
   // glad: load all OpenGL function pointers
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
@@ -38,10 +39,11 @@ void GEngine::CGLFWWindow::Init() {
 }
 
 void GEngine::CGLFWWindow::SetViewport() {
+  int factor = WINDOW_CONFIG::IS_MACOS_WINDOW ? 2 : 1;
   glViewport(static_cast<GLint>(WINDOW_CONFIG::VIEWPORT_LOWERLEFT_X),
              static_cast<GLint>(WINDOW_CONFIG::VIEWPORT_LOWERLEFT_Y),
-             static_cast<GLsizei>(WINDOW_CONFIG::VIEWPORT_WIDTH),
-             static_cast<GLsizei>(WINDOW_CONFIG::VIEWPORT_HEIGHT));
+             static_cast<GLsizei>(WINDOW_CONFIG::VIEWPORT_WIDTH * factor),
+             static_cast<GLsizei>(WINDOW_CONFIG::VIEWPORT_HEIGHT * factor));
 }
 
 GLFWwindow* GEngine::CGLFWWindow::GetGLFWwindow() const {

@@ -4,6 +4,11 @@
 std::vector<std::function<void(int, int, int, int)>>  GEngine::CInputSystem::key_callback_actions_;
 std::vector<std::function<void(int, int)>>            GEngine::CInputSystem::frame_size_callback_actions_;
 std::vector<std::function<void(double, double)>>      GEngine::CInputSystem::cursor_pos_callback_actions_;
+std::array<short, 512>  GEngine::CInputSystem::key_status_      = {0};  // 0: release, 1: press, 2: repeat
+std::array<short, 3>    GEngine::CInputSystem::cursor_status_   = {0};  // todo
+std::array<double, 2>   GEngine::CInputSystem::current_cursor_  = { 0.0 };
+std::array<double, 2>   GEngine::CInputSystem::last_cursor_     = { 0.0 };
+std::array<double, 2>   GEngine::CInputSystem::cursor_offset_   = { 0.0 };
 
 GEngine::CInputSystem::CInputSystem()
 {
@@ -31,49 +36,35 @@ void GEngine::CInputSystem::RegisterCursorPosCallBackFunction(std::function<void
   cursor_pos_callback_actions_.push_back(cursor_pos_callback_function);
 }
 
-void GEngine::CInputSystem::KeyCallBackFunction(GLFWwindow *window, GLint key,
-                                                GLint scancode, GLint action,
-                                                GLint mode) {
-  if (action == GLFW_PRESS) {
-    switch (key) {
-    case GLFW_KEY_ESCAPE:
-      glfwSetWindowShouldClose(window, GL_TRUE);
-      break;
-    case GLFW_KEY_W:
-      std::cout << "W Pressed!\n";
-      break;
-    case GLFW_KEY_A:
-      std::cout << "A Pressed!\n";
-      break;
-    case GLFW_KEY_S:
-      std::cout << "S Pressed!\n";
-      break;
-    case GLFW_KEY_D:
-      std::cout << "D Pressed!\n";
-      break;
-    default:
-      break;
-    }
+const std::array<double, 2>& GEngine::CInputSystem::GetCursorPos() const {
+  return current_cursor_;
+}
+
+const std::array<double, 2>& GEngine::CInputSystem::GetCursorOffset() const {
+  return cursor_offset_;
+}
+
+const short GEngine::CInputSystem::GetKeyStatus(int key) const {
+  auto window = CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow();
+  return glfwGetKey(window, key);
+}
+
+void GEngine::CInputSystem::KeyCallBackFunction(GLFWwindow *window, int key,
+                                                int scancode, int action,
+                                                int mode) {
+  // todo: fix me
+  if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, GL_TRUE);
   }
-  if (action == GLFW_RELEASE) {
-        switch (key) {
-    case GLFW_KEY_ESCAPE:
-      break;
-    case GLFW_KEY_W:
-      std::cout << "W Released!\n";
-      break;
-    case GLFW_KEY_A:
-      std::cout << "A Released!\n";
-      break;
-    case GLFW_KEY_S:
-      std::cout << "S Released!\n";
-      break;
-    case GLFW_KEY_D:
-      std::cout << "D Released!\n";
-      break;
-    default:
-      break;
-    }
+
+  key_status_[key] = action;
+
+  if (key_callback_actions_.empty()) {
+    return;
+  }
+
+  for (auto fn : key_callback_actions_) {
+    fn(key, scancode, action, mode);
   }
 }
 
@@ -84,8 +75,15 @@ void GEngine::CInputSystem::FrameSizeCallBackFunction(GLFWwindow *window,
              static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }
 
-void GEngine::CInputSystem::CursorPosCallBackFunction(GLFWwindow *window, GLdouble pos_x, GLdouble pos_y) {
-  std::cout << "CursorPosCallBackFunction Called\n";
+void GEngine::CInputSystem::CursorPosCallBackFunction(GLFWwindow *window, double pos_x, double pos_y) {
+  current_cursor_[0] = pos_x;
+  current_cursor_[1] = pos_y;
+
+  cursor_offset_[0] = current_cursor_[0] - last_cursor_[0];
+  cursor_offset_[1] = last_cursor_[1] - current_cursor_[1];
+
+  last_cursor_ = current_cursor_;
+
   if(cursor_pos_callback_actions_.empty()) {
     return;
   }
@@ -95,31 +93,3 @@ void GEngine::CInputSystem::CursorPosCallBackFunction(GLFWwindow *window, GLdoub
 }
 // void GEngine::CInputSystem::MouseButtonCallBackFunction();
 // void GEngine::CInputSystem::ScrollCallBackFunction();
-
-void GEngine::CInputSystem::Clear() {
-  cursor_delta_x_ = 0;
-  cursor_delta_y_ = 0;
-}
-
-void GEngine::CInputSystem::CalculateCursorDeltaAngles() {
-  std::array<int, 2> window_size = {GEngine::WINDOW_CONFIG::WINDOW_WIDTH,
-                                    GEngine::WINDOW_CONFIG::WINDOW_HEIGHT};
-
-  if (window_size[0] < 1 || window_size[1] < 1) {
-    return;
-  }
-
-  auto render_camera = CSingleton<CRenderSystem>()->GetOrCreateMainCamera();
-  auto fov = render_camera->GetFOV();
-
-  float cursor_delta_x(glm::radians(static_cast<float>(cursor_delta_x_)));
-  float cursor_delta_y(glm::radians(static_cast<float>(cursor_delta_y_)));
-
-  cursor_delta_yaw_ = (cursor_delta_x / (float)window_size[0]) * fov;
-  cursor_delta_pitch_ = -(cursor_delta_y / (float)window_size[1]) * fov;
-}
-
-void GEngine::CInputSystem::Tick() {
-  CalculateCursorDeltaAngles();
-  Clear();
-}

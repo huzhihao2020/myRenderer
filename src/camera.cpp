@@ -2,14 +2,15 @@
 #include "common.h"
 #include <iostream>
 #include "input_system.h"
+#include "app.h"
 
 GEngine::CCamera::CCamera(glm::vec3 position, float fov)
     : front_(glm::vec3(0.0f, 0.0f, -1.0f)),
       move_speed_(5.0f),
-      mouse_sensitivity_(0.1f),
+      mouse_sensitivity_(0.3f),
       fov_(fov),
       world_up_(glm::vec3(0.0f, 1.0f, 0.0f)),
-      yaw_(-90.f),
+      yaw_(0.0f),
       pitch_(0.0f),
       position_(position),
       is_ortho_(false),
@@ -24,20 +25,62 @@ GEngine::CCamera::~CCamera()
 }
 
 void GEngine::CCamera::Init() {
-  std::cout << "Camera Init!\n"; 
-  // register callback
+  // todo: register scroll
   CSingleton<CInputSystem>()->RegisterCursorPosCallBackFunction(
-      std::bind(&CCamera::ProcessCursorPosCallback,
-                this,
-                std::placeholders::_1,
+      std::bind(&CCamera::ProcessCursorPosCallback, this, std::placeholders::_1,
                 std::placeholders::_2));
+  CSingleton<CInputSystem>()->RegisterKeyCallBackFunction(std::bind(
+      &CCamera::ProcessKeyCallback, this, std::placeholders::_1,
+      std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+}
+
+void GEngine::CCamera::Tick() {
+  float delta_time = CSingleton<CApp>()->GetDeltaTime();
+  if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_W)) {
+    position_ += front_ * delta_time * move_speed_;
+  }
+  if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_S)) {
+    position_ -= front_ * delta_time * move_speed_;
+  }
+  if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_D)) {
+    position_ += right_ * delta_time * move_speed_;
+  }
+  if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_A)) {
+    position_ -= right_ * delta_time * move_speed_;
+  }
+  if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_UP)) {
+    move_speed_ = std::min(move_speed_ + 0.5, 15.0);
+  }
+  if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_DOWN)) {
+    move_speed_ = std::max(move_speed_ - 0.5, 0.5);
+  }
+  if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_P)) {
+    std::cout << "CameraPos: \t" << position_[0] << '\t' << position_[1] << '\t' << position_[2] << '\n';
+    std::cout << "CameraFront: \t" << front_[0] << '\t' << front_[1] << '\t' << front_[2] << '\n';
+    std::cout << "FPS: \t" << CSingleton<CApp>()->GetFPS() << '\n';
+  }
 }
 
 void GEngine::CCamera::ProcessCursorPosCallback(double pos_x, double pos_y) {
-  std::cout << "CursorPosCallBackFunction Called\n";
-  if(is_cursor_disabled_) {
+  if (is_cursor_disabled_) {
     return;
   }
+  auto offset = CSingleton<CInputSystem>()->GetCursorOffset();
+  offset[0] *= mouse_sensitivity_;
+  offset[1] *= mouse_sensitivity_;
+  yaw_ += offset[0];
+  pitch_ += offset[1];
+  // make sure that when pitch is out of bounds, screen doesn't get flipped
+  if (pitch_ > 89.0f)
+    pitch_ = 89.0f;
+  if (pitch_ < -89.0f)
+    pitch_ = -89.0f;
+  // calculate
+  UpdateCameraVectors();
+}
+
+void GEngine::CCamera::ProcessKeyCallback(int key, int scancode, int action, int mode) {
+  
 }
 
 glm::mat4 GEngine::CCamera::GetViewMatrix() const {
@@ -55,43 +98,6 @@ float GEngine::CCamera::GetFOV() const {
   return fov_;
 }
 
-// // processes input received from any keyboard-like input system. Accepts input
-// // parameter in the form of camera defined ENUM (to abstract it from windowing
-// // systems)
-// void GEngine::Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
-//   float velocity = MovementSpeed * deltaTime;
-//   if (direction == FORWARD)
-//     Position += Front * velocity;
-//   if (direction == BACKWARD)
-//     Position -= Front * velocity;
-//   if (direction == LEFT)
-//     Position -= Right * velocity;
-//   if (direction == RIGHT)
-//     Position += Right * velocity;
-// }
-
-// // processes input received from a mouse input system. Expects the offset value
-// // in both the x and y direction.
-// void GEngine::Camera::ProcessMouseMovement(float xoffset, float yoffset,
-//                           GLboolean constrainPitch = true) {
-//   xoffset *= MouseSensitivity;
-//   yoffset *= MouseSensitivity;
-
-//   Yaw += xoffset;
-//   Pitch += yoffset;
-
-//   // make sure that when pitch is out of bounds, screen doesn't get flipped
-//   if (constrainPitch) {
-//     if (Pitch > 89.0f)
-//       Pitch = 89.0f;
-//     if (Pitch < -89.0f)
-//       Pitch = -89.0f;
-//   }
-
-//   // update Front, Right and Up Vectors using the updated Euler angles
-//   updateCameraVectors();
-// }
-
 // // processes input received from a mouse scroll-wheel event. Only requires input
 // // on the vertical wheel-axis
 // void GEngine::Camera::ProcessMouseScroll(float yoffset) {
@@ -102,7 +108,7 @@ float GEngine::CCamera::GetFOV() const {
 //     Zoom = 45.0f;
 // }
 
-// calculates the front vector from the Camera's (updated) Euler Angles
+// update camera's [front, right, up] vector acccording to [yaw, pitch]
 void GEngine::CCamera::UpdateCameraVectors() {
   // calculate the new Front vector
   glm::vec3 front;

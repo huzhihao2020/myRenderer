@@ -27,6 +27,7 @@ project "MyRenderer"
   
   files {imguiFiles}
   files { "src/**.h", "src/**.cpp", "src/**.hpp"}
+  files { "shaders/*.glsl"}
   files { "vendor/**.h", "vendor/**.cpp", "vendor/**.hpp", "vendor/**.c"}
 
   -- system include paths

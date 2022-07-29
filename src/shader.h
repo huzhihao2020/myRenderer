@@ -13,8 +13,8 @@ namespace GEngine {
 class CShader {
 public:
   CShader(const std::string& vertex_shader_path,
-         const std::string& fragment_shader_path,
-         const std::string& geometry_shader_path = nullptr);
+          const std::string& fragment_shader_path,
+          const std::string& geometry_shader_path = "");
 
   void Use() const;
   void SetBool(const std::string &name, bool value) const;

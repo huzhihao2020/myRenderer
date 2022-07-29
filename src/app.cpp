@@ -1,8 +1,10 @@
 #include <iostream>
 #include <memory>
+#include <string>
 #include "app.h"
 #include "render_system.h"
 #include "input_system.h"
+#include "shader.h"
 
 GEngine::CApp::CApp()
 {
@@ -22,13 +24,20 @@ GLvoid GEngine::CApp::Init()
 }
 
 GLvoid GEngine::CApp::RunMainLoop() {
-  glClearColor(0.3f, 0.0f, 0.0f, 1.0f);
+  glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+  std::string vertex_shader_path("/Users/lance/code/GitHub/myRenderer/shaders/vert.glsl");
+  std::string fragment_shader_path("/Users/lance/code/GitHub/myRenderer/shaders/frag.glsl");
+  auto cube_shader = GEngine::CShader(vertex_shader_path, fragment_shader_path);
+  cube_shader.Use();
   while (!glfwWindowShouldClose(window_)) {
     CalculateTime();
-    glClear(GL_COLOR_BUFFER_BIT);
-    glfwPollEvents();
+    CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->Tick();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    CSingleton<CRenderSystem>()->RenderCube(cube_shader);
     glfwSwapBuffers(window_);
+    glfwPollEvents();
   }
+  glfwTerminate();
 }
 
 void GEngine::CApp::CalculateTime() {
