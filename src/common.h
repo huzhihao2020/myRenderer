@@ -2,6 +2,8 @@
 #include <string>
 #include <limits>
 
+#include "log.h"
+
 namespace GEngine {
   const float PI = 3.14159265358f;
   const float EPSILON = std::numeric_limits<float>::min();

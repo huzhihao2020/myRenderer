@@ -5,6 +5,7 @@
 #include "render_system.h"
 #include "input_system.h"
 #include "shader.h"
+#include "log.h"
 
 GEngine::CApp::CApp()
 {
@@ -16,7 +17,7 @@ GEngine::CApp::~CApp()
 
 GLvoid GEngine::CApp::Init()
 {
-  std::cout << "CApp init!\n";
+  GEngine::CLog::Init();
   CSingleton<CRenderSystem>()->GetOrCreateWindow()->Init();
   window_ = CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow();
   CSingleton<CRenderSystem>()->Init();

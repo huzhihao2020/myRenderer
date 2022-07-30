@@ -39,6 +39,7 @@ project "MyRenderer"
     "vendor/glm",
     "vendor/stb",
     "vendor/assimp",
+    "vendor/spdlog",
   }
   -- include paths
   includedirs {

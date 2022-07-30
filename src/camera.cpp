@@ -55,9 +55,9 @@ void GEngine::CCamera::Tick() {
     move_speed_ = std::max(move_speed_ - 0.5, 0.5);
   }
   if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_P)) {
-    std::cout << "CameraPos: \t" << position_[0] << '\t' << position_[1] << '\t' << position_[2] << '\n';
-    std::cout << "CameraFront: \t" << front_[0] << '\t' << front_[1] << '\t' << front_[2] << '\n';
-    std::cout << "FPS: \t" << CSingleton<CApp>()->GetFPS() << '\n';
+    GE_TRACE("Camera Postion ({0:8.5f}, {1:8.5f}, {2:8.5f})", position_[0], position_[1], position_[2]);
+    GE_TRACE("Camera Front ({0:8.5f}, {1:8.5f}, {2:8.5f})", front_[0], front_[1], front_[2]);
+    GE_INFO("FPS {}", CSingleton<CApp>()->GetFPS());
   }
 }
 

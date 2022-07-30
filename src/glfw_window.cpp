@@ -1,6 +1,7 @@
 #include "glfw_window.h"
 #include "common.h"
 #include <iostream>
+#include "log.h"
 
 GEngine::CGLFWWindow::CGLFWWindow() : window_(nullptr) {}
 
@@ -21,7 +22,7 @@ void GEngine::CGLFWWindow::Init() {
                              WINDOW_CONFIG::WINDOW_HEIGHT,
                              WINDOW_CONFIG::WINDOW_TITLE.c_str(), nullptr, nullptr);
   if (!window_) {
-    std::cout << "Failed to create GLFW window" << std::endl;
+    GE_CORE_ERROR("Failed to create GLFW window");
     glfwTerminate();
     return;
   }
@@ -30,10 +31,11 @@ void GEngine::CGLFWWindow::Init() {
   glfwSetInputMode(window_, GLFW_STICKY_KEYS, GLFW_TRUE);
   // glad: load all OpenGL function pointers
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
+    GE_CORE_ERROR("Failed to initialize GLAD");
     return;
   }
   SetViewport();
+  GE_CORE_INFO("GLFW window Init!");
   // stbi_set_flip_vertically_on_load(true);
   return;
 }
