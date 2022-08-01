@@ -48,7 +48,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 #include <string.h>
-#include <cmath>
 
 // ------------------------------------------------------------------------------------------------
 // Hashing function taken from
@@ -74,8 +73,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ------------------------------------------------------------------------------------------------
 inline uint32_t SuperFastHash (const char * data, uint32_t len = 0, uint32_t hash = 0) {
-    uint32_t tmp;
-    int rem;
+uint32_t tmp;
+int rem;
+size_t offset;
     
     if (!data) return 0;
     if (!len)len = (uint32_t)::strlen(data);
@@ -96,7 +96,11 @@ inline uint32_t SuperFastHash (const char * data, uint32_t len = 0, uint32_t has
     switch (rem) {
         case 3: hash += get16bits (data);
                 hash ^= hash << 16;
-                hash ^= abs(data[sizeof(uint16_t)]) << 18;
+                offset = static_cast<size_t>(sizeof(uint16_t));
+                if (offset < 0) {
+                    return 0;
+                }
+                hash ^= data[offset] << 18;
                 hash += hash >> 11;
                 break;
         case 2: hash += get16bits (data);

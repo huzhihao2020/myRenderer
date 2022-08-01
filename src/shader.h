@@ -30,9 +30,10 @@ public:
   void SetMat3(const std::string &name, const glm::mat3 &mat) const;
   void SetMat4(const std::string &name, const glm::mat4 &mat) const;
 
+  unsigned int GetShaderID() const;
 private:
   void CheckCompileErrors(GLuint shader, std::string type);
 
-  int shader_program_ID_ = 0;
+  unsigned int shader_program_ID_ = 0;
 };
 } // namespace GEngine

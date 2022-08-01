@@ -5,7 +5,7 @@ namespace GEngine {
 template <typename T> class CSingleton {
 public:
   static T *Get() {
-    static T s; // instialization of static members are thread-safe after c++11
+    static T s; // initialization of static members are thread-safe after c++11
     return &s;
   }
   // this allow: Singleton<T>()->func();

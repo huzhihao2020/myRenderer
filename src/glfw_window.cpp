@@ -27,7 +27,7 @@ void GEngine::CGLFWWindow::Init() {
     return;
   }
   glfwMakeContextCurrent(window_);
-  glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+  glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetInputMode(window_, GLFW_STICKY_KEYS, GLFW_TRUE);
   // glad: load all OpenGL function pointers
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -36,7 +36,6 @@ void GEngine::CGLFWWindow::Init() {
   }
   SetViewport();
   GE_CORE_INFO("GLFW window Init!");
-  // stbi_set_flip_vertically_on_load(true);
   return;
 }
 

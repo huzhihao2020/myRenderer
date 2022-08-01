@@ -51,7 +51,7 @@ project "MyRenderer"
     "vendor/lib"
   }
   -- libs and frameworks
-  links {"glfw3", "OpenGL.framework", "Cocoa.framework", "IOKit.framework"}
+  links {"glfw.3", "OpenGL.framework", "Cocoa.framework", "IOKit.framework", "assimp.5.2.0"}
 
   filter "configurations:Debug"
     defines{"DEBUG"}

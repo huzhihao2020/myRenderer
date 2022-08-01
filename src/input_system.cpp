@@ -13,12 +13,14 @@ std::array<double, 2>   GEngine::CInputSystem::cursor_offset_   = { 0.0 };
 GEngine::CInputSystem::CInputSystem()
 {
 }
+
 GEngine::CInputSystem::~CInputSystem()
 {
 }
 
 void GEngine::CInputSystem::Init() {
   auto window = CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow();
+  // note that these callbacks are not called each frame 
   glfwSetKeyCallback(window, KeyCallBackFunction);
   glfwSetFramebufferSizeCallback(window, FrameSizeCallBackFunction);
   glfwSetCursorPosCallback(window, CursorPosCallBackFunction);

@@ -80,7 +80,7 @@ void GEngine::CCamera::ProcessCursorPosCallback(double pos_x, double pos_y) {
 }
 
 void GEngine::CCamera::ProcessKeyCallback(int key, int scancode, int action, int mode) {
-  
+  // todo: 
 }
 
 glm::mat4 GEngine::CCamera::GetViewMatrix() const {

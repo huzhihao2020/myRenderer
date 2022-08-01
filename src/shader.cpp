@@ -1,9 +1,8 @@
 #include "shader.h"
 
-GEngine::CShader::CShader(
-    const std::string &vert_shader_path,
-    const std::string &frag_shader_path,
-    const std::string &geom_shader_path) {
+GEngine::CShader::CShader(const std::string &vert_shader_path,
+                          const std::string &frag_shader_path,
+                          const std::string &geom_shader_path) {
   // TODO:
   // tessellation_evaluation_shader, tessellation_control_shader, compute_shader_path
   // compute shader
@@ -133,6 +132,10 @@ void GEngine::CShader::SetMat4(const std::string &name,
                               const glm::mat4 &mat) const {
   glUniformMatrix4fv(glGetUniformLocation(shader_program_ID_, name.c_str()), 1, GL_FALSE,
                      &mat[0][0]);
+}
+
+unsigned int GEngine::CShader::GetShaderID() const {
+  return shader_program_ID_;
 }
 
 void GEngine::CShader::CheckCompileErrors(GLuint shader, std::string type) {
