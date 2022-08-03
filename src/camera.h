@@ -6,20 +6,34 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <vector>
 
+#include "common.h"
+
 namespace GEngine {
 
 class CCamera {
 public:
-  enum class ECameraMovement { Forward, Backward, Left, Right };
 
   CCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f), float fov = 45.0f);
   ~CCamera();
 
   void Init();
   void Tick();
-  glm::mat4 GetViewMatrix() const;
-  glm::mat4 GetProjectionMatrix() const;
-  float GetFOV() const;
+
+  glm::mat4 GetViewMatrix() const {
+    return glm::lookAt(position_, position_ + front_, world_up_);
+  };
+
+  glm::mat4 GetProjectionMatrix() const {
+    return is_ortho_ ? glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f)
+                     : glm::perspective(glm::radians(fov_),
+                                        static_cast<float>(GEngine::WINDOW_CONFIG::VIEWPORT_WIDTH) /static_cast<float>(GEngine::WINDOW_CONFIG::VIEWPORT_HEIGHT),
+                                        near_, far_);
+  };
+
+  float GetFOV() const { return fov_; };
+
+  bool GetCameraStatus() const { return camera_status_; }
+  void SetCameraStatus(bool camera_status) { camera_status_ = camera_status; }
 
 private:
   // calculates the front vector from the Camera's (updated) Euler Angles
@@ -37,7 +51,7 @@ private:
   float near_;
   float far_;
   bool is_ortho_;
-  bool is_cursor_disabled_;
+  bool camera_status_;
   // camera sensitivity
   float move_speed_;
   float mouse_sensitivity_;

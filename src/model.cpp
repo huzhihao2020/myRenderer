@@ -1,8 +1,8 @@
 #include "model.h"
+#include "log.h"
 
 #include "stb/stb_image.h"
 
-// constructor, expects a filepath to a 3D model.
 GEngine::CModel::CModel(std::string const &path, bool gamma) {
   gamma_correction_ = gamma;
   LoadModel(path);
@@ -10,47 +10,34 @@ GEngine::CModel::CModel(std::string const &path, bool gamma) {
 
 GEngine::CModel::~CModel() {}
 
-// draws the model, and thus all its meshes
-void GEngine::CModel::Draw(CShader &shader) {
+void GEngine::CModel::Draw(std::shared_ptr<CShader> shader) {
   for (unsigned int i = 0; i < meshes_.size(); i++)
     meshes_[i].Draw(shader);
 }
 
-// loads a model with supported ASSIMP extensions from file and stores the
-// resulting meshes in the meshes vector.
 void GEngine::CModel::LoadModel(std::string const &path) {
-  // read file via ASSIMP
   Assimp::Importer importer;
-  const aiScene *scene = importer.ReadFile(
-      path, aiProcess_Triangulate | aiProcess_GenSmoothNormals |
-                aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-  // check for errors
-  if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
-      !scene->mRootNode) // if is Not Zero
-  {
-    std::cout << "ERROR::ASSIMP:: " << importer.GetErrorString() << std::endl;
+  scene_ = importer.ReadFile(path, aiProcess_Triangulate | 
+                                   aiProcess_GenSmoothNormals |
+                                   aiProcess_FlipUVs |
+                                   aiProcess_CalcTangentSpace);
+
+  if (!scene_ || scene_->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene_->mRootNode) {
+    GE_ERROR("ERROR::ASSIMP:: {0}", importer.GetErrorString());
     return;
   }
-  // retrieve the directory path of the filepath
+
   directory_ = path.substr(0, path.find_last_of('/'));
 
-  // process ASSIMP's root node recursively
-  ProcessNode(scene->mRootNode, scene);
+  ProcessNode(scene_->mRootNode, scene_);
 }
 
-// processes a node in a recursive fashion. Processes each individual mesh
-// located at the node and repeats this process on its children nodes (if any).
 void GEngine::CModel::ProcessNode(aiNode *node, const aiScene *scene) {
-  // process each mesh located at the current node
   for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-    // the node object only contains indices to index the actual objects in the
-    // scene. the scene contains all the data, node is just to keep stuff
-    // organized (like relations between nodes).
     aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
     meshes_.push_back(ProcessMesh(mesh, scene));
   }
-  // after we've processed all of the meshes (if any) we then recursively
-  // process each of the children nodes
+
   for (unsigned int i = 0; i < node->mNumChildren; i++) {
     ProcessNode(node->mChildren[i], scene);
   }
@@ -215,7 +202,7 @@ unsigned int GEngine::TextureFromFile(const char *path,
 
     stbi_image_free(data);
   } else {
-    std::cout << "Texture failed to load at path: " << path << std::endl;
+    GE_ERROR("Texture failed to load at path: {0}", path);
     stbi_image_free(data);
   }
 

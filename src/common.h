@@ -16,7 +16,19 @@ namespace GEngine {
     extern int VIEWPORT_WIDTH;
     extern int VIEWPORT_HEIGHT;
     extern std::string WINDOW_TITLE;
-    extern bool IS_CURSOR_DISABLED;
     extern bool IS_MACOS_WINDOW; 
   }
+
+  enum class ERenderPassType {
+    Default,
+    Once,
+    // todo: implement other renderpass 
+    Delay,
+    ScreenQuad,
+    ShadowMap,
+    ZOnly,
+    Opaque,
+    Transparent,
+    UI,
+  };
 }

@@ -29,6 +29,7 @@ void GEngine::CGLFWWindow::Init() {
   glfwMakeContextCurrent(window_);
   glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetInputMode(window_, GLFW_STICKY_KEYS, GLFW_TRUE);
+  glfwSetCursorPos(window_, WINDOW_CONFIG::WINDOW_WIDTH/2, WINDOW_CONFIG::WINDOW_HEIGHT/2); // todo: fix me
   // glad: load all OpenGL function pointers
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     GE_CORE_ERROR("Failed to initialize GLAD");

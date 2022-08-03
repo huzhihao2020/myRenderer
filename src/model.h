@@ -14,23 +14,20 @@
 namespace GEngine {
 class CModel {
 public:
-  // model data
-  std::vector<GEngine::STexture>
-      textures_loaded_; // stores all the textures loaded so far, optimization
-                        // to make sure textures aren't loaded more than once.
-  std::vector<GEngine::CMesh> meshes_;
-  std::string directory_;
-  bool gamma_correction_;
-
   // constructor, expects a filepath to a 3D model.
   CModel();
   CModel(std::string const &path, bool gamma = false);
   ~CModel();
 
   // draws the model, and thus all its meshes
-  void Draw(GEngine::CShader &shader);
+  void Draw(std::shared_ptr<GEngine::CShader> shader);
 
 private:
+  std::vector<GEngine::STexture>  textures_loaded_; // stores all the textures loaded so far
+  std::vector<GEngine::CMesh>     meshes_;
+  const aiScene                   *scene_;        
+  std::string                     directory_;
+  bool                            gamma_correction_;
   // loads a model with supported ASSIMP extensions from file and stores the
   // resulting meshes in the meshes vector.
   void LoadModel(std::string const &path);
@@ -39,7 +36,6 @@ private:
   // located at the node and repeats this process on its children nodes (if
   // any).
   void ProcessNode(aiNode *node, const aiScene *scene);
-
   CMesh ProcessMesh(aiMesh *mesh, const aiScene *scene);
 
   // checks all material textures of a given type and loads the textures if

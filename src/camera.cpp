@@ -1,5 +1,4 @@
 #include "camera.h"
-#include "common.h"
 #include <iostream>
 #include "input_system.h"
 #include "app.h"
@@ -62,7 +61,7 @@ void GEngine::CCamera::Tick() {
 }
 
 void GEngine::CCamera::ProcessCursorPosCallback(double pos_x, double pos_y) {
-  if (is_cursor_disabled_) {
+  if (camera_status_) {
     return;
   }
   auto offset = CSingleton<CInputSystem>()->GetCursorOffset();
@@ -81,21 +80,6 @@ void GEngine::CCamera::ProcessCursorPosCallback(double pos_x, double pos_y) {
 
 void GEngine::CCamera::ProcessKeyCallback(int key, int scancode, int action, int mode) {
   // todo: 
-}
-
-glm::mat4 GEngine::CCamera::GetViewMatrix() const {
-  return glm::lookAt(position_, position_ + front_, world_up_);
-}
-
-glm::mat4 GEngine::CCamera::GetProjectionMatrix() const {
-  return is_ortho_ ? glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 100.0f)
-                   : glm::perspective(glm::radians(fov_),
-                         static_cast<float>(GEngine::WINDOW_CONFIG::VIEWPORT_WIDTH) / static_cast<float>(GEngine::WINDOW_CONFIG::VIEWPORT_HEIGHT),
-                         near_, far_);
-}
-
-float GEngine::CCamera::GetFOV() const {
-  return fov_;
 }
 
 // // processes input received from a mouse scroll-wheel event. Only requires input

@@ -1,15 +1,17 @@
 #include <iostream>
 
 #include "app.h"
+#include "render_system.h"
+#include "renderpass/skybox_pass.h"
 
-// for test
-
-void TestScene() {
-
-}
+using namespace GEngine;
 
 int main() {
-  GEngine::CSingleton<GEngine::CApp>()->Init();
-  GEngine::CSingleton<GEngine::CApp>()->RunMainLoop();
+
+  // register RenderPass & add Objects(todo)
+  CSingleton<CRenderSystem>()->RegisterRenderPass(std::make_shared<CSkyboxPass>("skybox_pass", 1));
+
+  CSingleton<CApp>()->Init();
+  CSingleton<CApp>()->RunMainLoop();
   return 0;
 }

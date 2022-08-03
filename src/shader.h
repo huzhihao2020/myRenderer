@@ -7,6 +7,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "texture.h"
+#include <vector>
+#include <tuple>
+#include <map>
 
 namespace GEngine {
 
@@ -29,11 +33,17 @@ public:
   void SetMat2(const std::string &name, const glm::mat2 &mat) const;
   void SetMat3(const std::string &name, const glm::mat3 &mat) const;
   void SetMat4(const std::string &name, const glm::mat4 &mat) const;
+  void SetTexture(const std::string &name, const std::shared_ptr<GEngine::CTexture> texture);
 
   unsigned int GetShaderID() const;
 private:
   void CheckCompileErrors(GLuint shader, std::string type);
+  void ActiveBoundTextures() const;
 
   unsigned int shader_program_ID_ = 0;
+  // number of textures bound to specific shader instance
+  int bound_textures_num_ = 0; 
+  // ["textureName": textureID, texturePtr] for each  bound texture
+  std::map<std::string, std::tuple<int, std::shared_ptr<GEngine::CTexture>>> bound_textures_;
 };
 } // namespace GEngine

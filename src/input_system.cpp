@@ -1,11 +1,12 @@
 #include "input_system.h"
+#include "log.h"
 
 // static members of CInputSystem
 std::vector<std::function<void(int, int, int, int)>>  GEngine::CInputSystem::key_callback_actions_;
 std::vector<std::function<void(int, int)>>            GEngine::CInputSystem::frame_size_callback_actions_;
 std::vector<std::function<void(double, double)>>      GEngine::CInputSystem::cursor_pos_callback_actions_;
+unsigned short     GEngine::CInputSystem::cursor_status_   = 0;  // 0: disabled, 1:normal
 std::array<short, 512>  GEngine::CInputSystem::key_status_      = {0};  // 0: release, 1: press, 2: repeat
-std::array<short, 3>    GEngine::CInputSystem::cursor_status_   = {0};  // todo
 std::array<double, 2>   GEngine::CInputSystem::current_cursor_  = { 0.0 };
 std::array<double, 2>   GEngine::CInputSystem::last_cursor_     = { 0.0 };
 std::array<double, 2>   GEngine::CInputSystem::cursor_offset_   = { 0.0 };
@@ -54,12 +55,19 @@ const short GEngine::CInputSystem::GetKeyStatus(int key) const {
 void GEngine::CInputSystem::KeyCallBackFunction(GLFWwindow *window, int key,
                                                 int scancode, int action,
                                                 int mode) {
-  // todo: fix me
+  // press [esc] to close the window
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GL_TRUE);
   }
 
   key_status_[key] = action;
+
+  // press [Q] to lock/unlock the cursor
+  if(key_status_[GLFW_KEY_Q] == GLFW_PRESS) {
+    cursor_status_ = !cursor_status_;
+    CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->SetCameraStatus(cursor_status_);
+    glfwSetInputMode(window, GLFW_CURSOR, cursor_status_==0 ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+  }
 
   if (key_callback_actions_.empty()) {
     return;
@@ -72,7 +80,6 @@ void GEngine::CInputSystem::KeyCallBackFunction(GLFWwindow *window, int key,
 
 void GEngine::CInputSystem::FrameSizeCallBackFunction(GLFWwindow *window,
                                                       int width, int height) {
-  std::cout << "FrameSizeCallBackFunction!\n";
   glViewport(static_cast<GLint>(0), static_cast<GLint>(0),
              static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 }

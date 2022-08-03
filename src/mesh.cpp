@@ -14,7 +14,7 @@ GEngine::CMesh::CMesh(std::vector<SVertex> vertices,
 GEngine::CMesh::~CMesh() {}
 
 // render the mesh
-void GEngine::CMesh::Draw(CShader &shader) {
+void GEngine::CMesh::Draw(std::shared_ptr<CShader> shader) {
   unsigned int diffuseNr = 1;
   unsigned int specularNr = 1;
   unsigned int normalNr = 1;
@@ -36,7 +36,7 @@ void GEngine::CMesh::Draw(CShader &shader) {
           std::to_string(heightNr++); // transfer unsigned int to string
 
     glUniform1i(
-        glGetUniformLocation(shader.GetShaderID(), (name + number_str).c_str()),
+        glGetUniformLocation(shader->GetShaderID(), (name + number_str).c_str()),
         i);
     glBindTexture(GL_TEXTURE_2D, textures_[i].id_);
   }

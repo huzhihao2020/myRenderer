@@ -1,4 +1,6 @@
 #include "shader.h"
+#include "log.h"
+#include <GLFW/glfw3.h>
 
 GEngine::CShader::CShader(const std::string &vert_shader_path,
                           const std::string &frag_shader_path,
@@ -35,8 +37,7 @@ GEngine::CShader::CShader(const std::string &vert_shader_path,
       geom_code = geom_shader_stream.str();
     }
   } catch (std::ifstream::failure &e) {
-    std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << e.what()
-              << std::endl;
+    GE_ERROR("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: {}", e.what());
   }
   // 2. compile shaders
   unsigned int vertex, fragment;
@@ -76,7 +77,10 @@ GEngine::CShader::CShader(const std::string &vert_shader_path,
     glDeleteShader(geometry);
 }
 
-void GEngine::CShader::Use() const { glUseProgram(shader_program_ID_); }
+void GEngine::CShader::Use() const {
+  glUseProgram(shader_program_ID_);
+  ActiveBoundTextures();
+}
 
 void GEngine::CShader::SetBool(const std::string &name, bool value) const {
   glUniform1i(glGetUniformLocation(shader_program_ID_, name.c_str()), (int)value);
@@ -134,6 +138,24 @@ void GEngine::CShader::SetMat4(const std::string &name,
                      &mat[0][0]);
 }
 
+void GEngine::CShader::SetTexture(const std::string &name, const std::shared_ptr<GEngine::CTexture> texture) {
+  if (bound_textures_.find(name) != bound_textures_.end()) {
+    // [name] already exists, overwrite with new texture
+    auto &item = bound_textures_[name];
+    std::get<1>(item) = texture;
+    glActiveTexture(GL_TEXTURE0 + std::get<0>(item));
+    glBindTexture(static_cast<GLuint>(texture->GetTarget()), texture->id_);
+  } else {
+    // register a new texture
+    int binding_index = bound_textures_num_;
+    glActiveTexture(GL_TEXTURE0 + binding_index);
+    glUniform1i(glGetUniformLocation(shader_program_ID_, name.c_str()), binding_index);
+    glBindTexture(static_cast<GLuint>(texture->GetTarget()), texture->id_);
+    bound_textures_[name] = std::make_tuple(binding_index, texture);
+    bound_textures_num_++;
+  }
+}
+
 unsigned int GEngine::CShader::GetShaderID() const {
   return shader_program_ID_;
 }
@@ -145,21 +167,25 @@ void GEngine::CShader::CheckCompileErrors(GLuint shader, std::string type) {
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
     if (!success) {
       glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-      std::cout
-          << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
-          << infoLog
-          << "\n -- --------------------------------------------------- -- "
-          << std::endl;
+      GE_ERROR("ERROR::SHADER_COMPILATION_ERROR of type: {0} \n{1}"
+               "-------------------------------------------------------",
+               type, infoLog);
     }
   } else {
     glGetProgramiv(shader, GL_LINK_STATUS, &success);
     if (!success) {
       glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-      std::cout
-          << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
-          << infoLog
-          << "\n -- --------------------------------------------------- -- "
-          << std::endl;
+      GE_ERROR("ERROR::SHADER_COMPILATION_ERROR of type: {0} \n{1}"
+               "-------------------------------------------------------",
+               type, infoLog);
     }
+  }
+}
+
+void GEngine::CShader::ActiveBoundTextures() const {
+  for (const auto item : bound_textures_) {
+    glActiveTexture(GL_TEXTURE0 + std::get<0>(item.second));
+    const auto &texture = std::get<1>(item.second);
+    glBindTexture(static_cast<GLuint>(texture->GetTarget()), texture->id_);
   }
 }

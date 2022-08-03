@@ -35,7 +35,7 @@ public:
         std::vector<unsigned int> indices,
         std::vector<STexture> textures);
   ~CMesh();
-  void Draw(CShader &shader);
+  void Draw(std::shared_ptr<CShader> shader);
   // Mesh Data
   std::vector<SVertex> vertices_;
   std::vector<unsigned int> indices_;

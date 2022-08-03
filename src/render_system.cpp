@@ -1,4 +1,5 @@
 #include "render_system.h"
+#include <algorithm>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -48,13 +49,101 @@ GEngine::CRenderSystem::GetOrCreateModelByPath(const std::string &path) {
   return model_map_[filename];
 }
 
-void GEngine::CRenderSystem::RenderCube(CShader &shader) {
-  shader.Use();
+void GEngine::CRenderSystem::RenderCube() {
+  glBindVertexArray(GetOrCreateCubeVAO());
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+  glBindVertexArray(0);
+}
+
+int GEngine::CRenderSystem::GetOrCreateCubeVAO() {
+  if(cube_VAO_ != 0) {
+      return cube_VAO_;
+  }
+  float cube_vertices[] = {
+    // positions          // normal            // uv
+    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+      1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+      1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+      1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+    -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+
+    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+      1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
+      1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+      1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
+    -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,
+    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
+
+    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+    -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+    1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+    1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+    1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+    1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+    1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+
+    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+      1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+      1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+      1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+    -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+
+    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+      1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+      1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+      1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+    -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f};
+
+  cube_VAO_ = CreateVAO(cube_vertices, sizeof(cube_vertices), {3, 3, 2});
+  return cube_VAO_;
+}
+
+int GEngine::CRenderSystem::CreateVAO(const GLvoid *vertex_data, int data_size,
+              std::initializer_list<int> attribute_layout, const int indices[],
+              int indices_size, int *voVBO) {
+  unsigned int VAO, VBO, EBO;
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, data_size, vertex_data, GL_STATIC_DRAW);
+  if(indices) {
+    // todo
+  }
+  int offset = 0;
+  int i = 0;
+  int stride = std::accumulate(attribute_layout.begin(), attribute_layout.end(), 0);
+  for(auto length : attribute_layout) {
+      glEnableVertexAttribArray(i);
+    glVertexAttribPointer(i, length, GL_FLOAT, GL_FALSE, stride * sizeof(GL_FLOAT), (GLvoid*)(offset * sizeof(GL_FLOAT)));
+    offset += length;
+    i++;
+  }
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  if(voVBO) {
+    // todo
+  }
+  return VAO;
+}
+
+void GEngine::CRenderSystem::RenderCube(std::shared_ptr<CShader> shader) {
+  shader->Use();
   glm::mat4 model = glm::mat4(1.0f);
   glm::mat4 view = GetOrCreateMainCamera()->GetViewMatrix();
   glm::mat4 projection = GetOrCreateMainCamera()->GetProjectionMatrix();
   glm::mat4 projection_view_model = projection * view * model;
-  shader.SetMat4("projection_view_model", projection_view_model);
+  shader->SetMat4("projection_view_model", projection_view_model);
   if(cube_VAO_ != 0) {
     // cube already exists
     glActiveTexture(GL_TEXTURE0);
@@ -137,6 +226,7 @@ void GEngine::CRenderSystem::RenderCube(CShader &shader) {
 }
 
 unsigned int GEngine::CRenderSystem::LoadTexture(const std::string &path) {
+  
   unsigned int textureID;
   glGenTextures(1, &textureID);
 
@@ -155,25 +245,44 @@ unsigned int GEngine::CRenderSystem::LoadTexture(const std::string &path) {
     } else if (nrComponents == 4) {
       format = GL_RGBA;
     } else {
-      std::cout << "Texture format error " << path << std::endl;
+      GE_ERROR("Texture format error: {}", path);
       stbi_image_free(data);
     }
     glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-                 GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     stbi_image_free(data);
 
   } else {
-    std::cout << "Texture failed to load at path: " << path << std::endl;
+    GE_ERROR("Texture failed to load at path: {}", path);
     stbi_image_free(data);
   }
   return textureID;
+}
+
+void GEngine::CRenderSystem::RegisterRenderPass(
+    const std::shared_ptr<GEngine::CRenderPass> &render_pass) {
+  if (render_pass == nullptr) {
+    return;
+  }
+  render_passes_.push_back(render_pass);
+  std::sort(render_passes_.begin(), render_passes_.end(),
+            [](const std::shared_ptr<GEngine::CRenderPass> render_pass1,
+               const std::shared_ptr<GEngine::CRenderPass> render_pass2) {
+              return render_pass1 < render_pass2;
+            });
+  // render_passes_.insert(
+  //     std::lower_bound(
+  //         render_passes_.begin(), render_passes_.end(), render_pass,
+  //         [](const std::shared_ptr<GEngine::CRenderPass> render_pass1,
+  //            const std::shared_ptr<GEngine::CRenderPass> render_pass2) {
+  //           render_pass1 < render_pass2
+  //         }),
+  //     render_pass);
 }

@@ -10,18 +10,6 @@
 namespace GEngine {
 class CInputSystem {
 public:
-    enum class EMovementCommand : unsigned int
-    {
-        forward  = 1 << 0,                 // W
-        backward = 1 << 1,                 // S
-        left     = 1 << 2,                 // A
-        right    = 1 << 3,                 // D
-        jump     = 1 << 4,                 // SPACE
-        squat    = 1 << 5,                 // not implemented yet
-        sprint   = 1 << 6,                 // LEFT SHIFT
-        fire     = 1 << 7,                 // not implemented yet
-        invalid  = (unsigned int)(1 << 31) // lost focus
-    };
 
   CInputSystem();
   ~CInputSystem();
@@ -39,8 +27,8 @@ public:
 
 private:
 
+  static unsigned short cursor_status_; // 0: hidden, 1:disabled
   static std::array<short, 512> key_status_;  // 0: release, 1: press, 2: repeat
-  static std::array<short, 3> cursor_status_; // todo
 
   static void KeyCallBackFunction(GLFWwindow *window, int key, int scancode, int action, int mode);
   static void FrameSizeCallBackFunction(GLFWwindow *window, int width, int height);

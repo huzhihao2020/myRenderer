@@ -26,7 +26,7 @@ project "MyRenderer"
   cppdialect "C++20"
   
   files {imguiFiles}
-  files { "src/**.h", "src/**.cpp", "src/**.hpp"}
+  files { "src/**.h", "src/**.cpp", "src/**.hpp", "src/**.glsl"}
   files { "shaders/*.glsl"}
   files { "vendor/**.h", "vendor/**.cpp", "vendor/**.hpp", "vendor/**.c"}
 
