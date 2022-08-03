@@ -25,7 +25,7 @@ void GEngine::CInputSystem::Init() {
   glfwSetKeyCallback(window, KeyCallBackFunction);
   glfwSetFramebufferSizeCallback(window, FrameSizeCallBackFunction);
   glfwSetCursorPosCallback(window, CursorPosCallBackFunction);
-  // glfwSetMouseButtonCallback(window, MouseButtonCallBackFunction);
+  glfwSetMouseButtonCallback(window, MouseButtonCallBackFunction);
   // glfwSetScrollCallback(window, ScrollCallBackFunction);
 }
 
@@ -100,5 +100,9 @@ void GEngine::CInputSystem::CursorPosCallBackFunction(GLFWwindow *window, double
     fn(pos_x, pos_y);
   }
 }
-// void GEngine::CInputSystem::MouseButtonCallBackFunction();
+
+void GEngine::CInputSystem::MouseButtonCallBackFunction(GLFWwindow *window, int key, int action, int mode) {
+
+}
+
 // void GEngine::CInputSystem::ScrollCallBackFunction();

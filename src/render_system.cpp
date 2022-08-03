@@ -17,8 +17,6 @@ void GEngine::CRenderSystem::Init() {
   if (!main_camera_) {
     main_camera_ = std::make_shared<CCamera>();
   }
-  // todo: setup GUI
-  // todo: register Callback
 }
 
 std::shared_ptr<GEngine::CGLFWWindow>
@@ -35,6 +33,14 @@ GEngine::CRenderSystem::GetOrCreateMainCamera() {
     main_camera_ = std::make_shared<GEngine::CCamera>();
   }
   return main_camera_;
+}
+
+std::shared_ptr<GEngine::CEditorUI>
+GEngine::CRenderSystem::GetOrCreateMainUI() {
+  if (!main_UI_) {
+    main_UI_ = std::make_shared<GEngine::CEditorUI>();
+  }
+  return main_UI_;
 }
 
 std::shared_ptr<GEngine::CModel> &
@@ -226,7 +232,7 @@ void GEngine::CRenderSystem::RenderCube(std::shared_ptr<CShader> shader) {
 }
 
 unsigned int GEngine::CRenderSystem::LoadTexture(const std::string &path) {
-  
+
   unsigned int textureID;
   glGenTextures(1, &textureID);
 

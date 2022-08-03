@@ -1,16 +1,17 @@
 #pragma once
 #include "camera.h"
+#include "editor_ui.h"
 #include "glfw_window.h"
 #include "model.h"
+#include "render_pass.h"
 #include "shader.h"
 #include "singleton.h"
+#include <initializer_list>
+#include <map>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <vector>
-#include <map>
-#include "render_pass.h"
-#include <initializer_list>
-#include <numeric>
 
 namespace GEngine {
   // be sure to call CApp method with CSingleton<RenderSystem>()->func();
@@ -24,6 +25,7 @@ public:
   void Init();
   std::shared_ptr<CGLFWWindow>  GetOrCreateWindow();
   std::shared_ptr<CCamera>      GetOrCreateMainCamera();
+  std::shared_ptr<CEditorUI>    GetOrCreateMainUI();
   std::shared_ptr<CModel>&      GetOrCreateModelByPath(const std::string& path);
   std::vector<std::shared_ptr<GEngine::CRenderPass>>& GetRenderPass() { return render_passes_; }
 
@@ -42,8 +44,9 @@ public:
 
 private:
   unsigned int cube_VAO_ = 0;
-  std::shared_ptr<CGLFWWindow> window_;
-  std::shared_ptr<CCamera> main_camera_; // main camera
+  std::shared_ptr<CGLFWWindow>  window_;
+  std::shared_ptr<CCamera>      main_camera_; // main camera
+  std::shared_ptr<CEditorUI>    main_UI_;     // main UI
 
   std::vector<std::shared_ptr<GEngine::CRenderPass>>  render_passes_;
   std::map<std::string, std::shared_ptr<CModel>>      model_map_;

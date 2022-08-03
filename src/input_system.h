@@ -33,7 +33,7 @@ private:
   static void KeyCallBackFunction(GLFWwindow *window, int key, int scancode, int action, int mode);
   static void FrameSizeCallBackFunction(GLFWwindow *window, int width, int height);
   static void CursorPosCallBackFunction(GLFWwindow *window, double pos_x, double pos_y);
-  // static void GEngine::CInputSystem::MouseButtonCallBackFunction(GLFWwindow *window,);
+  static void MouseButtonCallBackFunction(GLFWwindow *window, int key, int action, int mode);
   // static void GEngine::CInputSystem::ScrollCallBackFunction(GLFWwindow *window,);
 
   static std::vector<std::function<void(int, int, int, int)>> key_callback_actions_;

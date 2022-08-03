@@ -35,7 +35,7 @@ project "MyRenderer"
     "vendor",
     "vendor/glad/include",
     "vendor/GLFW",
-    "vendor/imgui",
+    "imgui",
     "vendor/glm",
     "vendor/stb",
     "vendor/assimp",
@@ -43,8 +43,8 @@ project "MyRenderer"
   }
   -- include paths
   includedirs {
-    "vendor/imgui",
-    "vendor/imgui/backends",
+    ".",
+    "imgui",
   }
   -- lib paths
   libdirs {
@@ -60,7 +60,3 @@ project "MyRenderer"
   filter "configurations:Release"
     defines{"NDEBUG"}
     optimize "On"
-
-
-
-  libdirs {"vendor/lib"}
