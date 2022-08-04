@@ -16,15 +16,15 @@ GEngine::CSkyboxPass::~CSkyboxPass() {}
 
 void GEngine::CSkyboxPass::Init() {
   std::vector<std::string> faces{
-      "/Users/lance/code/GitHub/myRenderer/assets/textures/skybox/right.jpg",
-      "/Users/lance/code/GitHub/myRenderer/assets/textures/skybox/left.jpg",
-      "/Users/lance/code/GitHub/myRenderer/assets/textures/skybox/top.jpg",  
-      "/Users/lance/code/GitHub/myRenderer/assets/textures/skybox/bottom.jpg",
-      "/Users/lance/code/GitHub/myRenderer/assets/textures/skybox/front.jpg",
-      "/Users/lance/code/GitHub/myRenderer/assets/textures/skybox/back.jpg"};
+      "../../assets/textures/skybox/right.jpg",
+      "../../assets/textures/skybox/left.jpg",
+      "../../assets/textures/skybox/top.jpg",  
+      "../../assets/textures/skybox/bottom.jpg",
+      "../../assets/textures/skybox/front.jpg",
+      "../../assets/textures/skybox/back.jpg"};
 
-  std::string v_path("/Users/lance/code/GitHub/myRenderer/src/renderpass/skybox_shader_vert.glsl");
-  std::string f_path("/Users/lance/code/GitHub/myRenderer/src/renderpass/skybox_shader_frag.glsl");
+  std::string v_path("../../src/renderpass/skybox_shader_vert.glsl");
+  std::string f_path("../../src/renderpass/skybox_shader_frag.glsl");
   shader_ = std::make_shared<GEngine::CShader>(v_path, f_path);
 
   skybox_texture_ = std::make_shared<GEngine::CTexture>(GEngine::CTexture::ETarget::kTextureCubeMap);

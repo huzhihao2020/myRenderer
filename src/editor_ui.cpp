@@ -18,7 +18,7 @@ void GEngine::CEditorUI::Init() {
   // io_ = &ImGui::GetIO(); (void)(*io_);
   // io_->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
   // io_->ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable Docking
-  // // io_->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // Enable Multi-Viewport
+  // io_->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // Enable Multi-Viewport
   // // Setup Dear ImGui style
   // ImGui::StyleColorsDark();
   // style_ = &ImGui::GetStyle();

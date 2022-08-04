@@ -33,17 +33,17 @@ GLvoid GEngine::CApp::Init()
 
 GLvoid GEngine::CApp::RunMainLoop() {
   glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-  auto cube_shader = std::make_shared<CShader>(std::string("/Users/lance/code/GitHub/myRenderer/shaders/vert.glsl"),
-                                               std::string("/Users/lance/code/GitHub/myRenderer/shaders/frag.glsl"));
-  auto model_shader = std::make_shared<CShader>(std::string("/Users/lance/code/GitHub/myRenderer/shaders/model_VS.glsl"), 
-                                                std::string("/Users/lance/code/GitHub/myRenderer/shaders/model_FS.glsl"));
+  auto cube_shader  = std::make_shared<CShader>(std::string("../../shaders/vert.glsl"),
+                                                std::string("../../shaders/frag.glsl"));
+  auto model_shader = std::make_shared<CShader>(std::string("../../shaders/model_VS.glsl"), 
+                                                std::string("../../shaders/model_FS.glsl"));
   // texture
-  std::string texture_path = "/Users/lance/code/GitHub/myRenderer/assets/textures/marble.jpg";
+  std::string texture_path = "../../assets/textures/marble.jpg";
   auto cube_texture = std::make_shared<CTexture>(texture_path); 
   cube_shader->SetTexture("cube_texture", cube_texture);
 
   // model
-  std::string model_path("/Users/lance/code/GitHub/myRenderer/assets/backpack/backpack.obj");
+  std::string model_path("../../assets/backpack/backpack.obj");
   auto model_backpack = GEngine::CModel(model_path);
 
   // init main_ui
@@ -52,7 +52,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
   auto io_ = &ImGui::GetIO(); (void)(*io_);
   io_->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
   io_->ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable Docking
-  // io_->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // Enable Multi-Viewport
+  io_->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;    // Enable Multi-Viewport
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
   auto style_ = &ImGui::GetStyle();
