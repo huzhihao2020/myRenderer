@@ -16,6 +16,12 @@ void GEngine::CRenderSystem::Init() {
   // set up main camera
   if (!main_camera_) {
     main_camera_ = std::make_shared<CCamera>();
+    main_camera_->Init();
+  }
+  // set up main UI
+  if (!main_UI_) {
+    main_UI_ = std::make_shared<CEditorUI>();
+    main_UI_->Init();
   }
 }
 

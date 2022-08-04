@@ -15,8 +15,7 @@ GEngine::CCamera::CCamera(glm::vec3 position, float fov)
       is_ortho_(false),
       near_(0.1f),
       far_(100.0f) {
-  Init();
-  UpdateCameraVectors();
+  // do nothing
 }
 
 GEngine::CCamera::~CCamera()
@@ -31,6 +30,7 @@ void GEngine::CCamera::Init() {
   CSingleton<CInputSystem>()->RegisterKeyCallBackFunction(std::bind(
       &CCamera::ProcessKeyCallback, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+  UpdateCameraVectors();
 }
 
 void GEngine::CCamera::Tick() {

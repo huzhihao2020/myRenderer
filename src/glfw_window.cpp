@@ -27,6 +27,7 @@ void GEngine::CGLFWWindow::Init() {
     return;
   }
   glfwMakeContextCurrent(window_);
+  glfwSwapInterval(1); // Enable vsync
   glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetInputMode(window_, GLFW_STICKY_KEYS, GLFW_TRUE);
   glfwSetCursorPos(window_, WINDOW_CONFIG::WINDOW_WIDTH/2, WINDOW_CONFIG::WINDOW_HEIGHT/2); // todo: fix me
