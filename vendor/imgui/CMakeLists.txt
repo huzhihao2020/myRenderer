@@ -8,5 +8,4 @@ file(GLOB_RECURSE SOURCES imgui_demo.cpp imgui_draw.cpp imgui_tables.cpp imgui_w
                            
 add_library(imgui STATIC ${SOURCES})
 
-target_include_directories(imgui PUBLIC ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/backends ${CMAKE_SOURCE_DIR}/vendor)
-target_compile_options(imgui INTERFACE -DGLM_FORCE_CXX20 -DGLM_ENABLE_EXPERIMENTAL)
+target_include_directories(imgui PUBLIC ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/backends ${CMAKE_SOURCE_DIR}/vendor ${CMAKE_SOURCE_DIR}/vendor/GLFW/include)

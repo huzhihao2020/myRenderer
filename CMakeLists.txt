@@ -34,15 +34,16 @@ target_link_libraries(myRenderer PUBLIC
   glm
   glad
   imgui
-  ${vendor_SOURCE_DIR}/lib/libglfw.3.dylib
-  ${vendor_SOURCE_DIR}/lib/libassimp.5.2.0.dylib
+  glfw
+  assimp
   "-framework OpenGL"
   "-framework Cocoa" 
   "-framework IOKit"
 )
 
-target_include_directories(myRenderer PUBLIC ${vendor_SOURCE_DIR})
-target_include_directories(myRenderer PRIVATE ${GEngine_SOURCE_DIR}/src ${GEngine_SOURCE_DIR}/src/GEngine)
+target_include_directories(myRenderer PUBLIC ${vendor_SOURCE_DIR} ${vendor_SOURCE_DIR}/assimp/include)
+target_include_directories(myRenderer PRIVATE ${GEngine_SOURCE_DIR}/src ${GEngine_SOURCE_DIR}/src/GEngine 
+                                              ${PROJECT_BINARY_DIR}/vendor/assimp ${PROJECT_BINARY_DIR}/vendor/assimp/include)
 
 file(GLOB_RECURSE SANDBOX_SOURCES
   "${Sandbox_SOURCE_DIR}/*.h"
