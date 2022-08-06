@@ -23,8 +23,8 @@ void GEngine::CSkyboxPass::Init() {
       "../../assets/textures/skybox/front.jpg",
       "../../assets/textures/skybox/back.jpg"};
 
-  std::string v_path("../../src/renderpass/skybox_shader_vert.glsl");
-  std::string f_path("../../src/renderpass/skybox_shader_frag.glsl");
+  std::string v_path("../../GEngine/src/GEngine/renderpass/skybox_shader_vert.glsl");
+  std::string f_path("../../GEngine/src/GEngine/renderpass/skybox_shader_frag.glsl");
   shader_ = std::make_shared<GEngine::CShader>(v_path, f_path);
 
   skybox_texture_ = std::make_shared<GEngine::CTexture>(GEngine::CTexture::ETarget::kTextureCubeMap);

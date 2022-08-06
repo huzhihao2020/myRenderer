@@ -1,8 +1,6 @@
 #include <iostream>
 
-#include "app.h"
-#include "render_system.h"
-#include "renderpass/skybox_pass.h"
+#include "GEngine.h"
 
 using namespace GEngine;
 

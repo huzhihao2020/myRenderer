@@ -4,10 +4,20 @@ A toy renderer
 
 ## Build for MACOS
 
-`sudo ./premake5 xcode4 `
+`sudo chmod 777 ./build-macos.sh`
+
+`sudo ./build-macos.sh`
+
+The `.xcodeproj` file will be written to `build/`
 
 ![GEngine image](GEngine.jpeg)
 
-## Todo
+## Files
 
-1. 
+* GEngine
+* Sandbox
+* shaders
+* assets
+* vendor
+
+## Todo

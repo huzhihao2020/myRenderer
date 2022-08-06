@@ -1,5 +1,6 @@
 #include "model.h"
 #include "log.h"
+#include <assimp/material.h>
 
 #include "stb/stb_image.h"
 
@@ -23,7 +24,7 @@ void GEngine::CModel::LoadModel(std::string const &path) {
                                    aiProcess_CalcTangentSpace);
 
   if (!scene_ || scene_->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene_->mRootNode) {
-    GE_ERROR("ERROR::ASSIMP:: {0}", importer.GetErrorString());
+    GE_ERROR("Assipm couldn't load model: {0}.\nDetail: {1}", path, importer.GetErrorString());
     return;
   }
 

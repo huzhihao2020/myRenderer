@@ -1,6 +1,6 @@
 #pragma once
-#include "render_pass.h"
-#include "texture.h"
+#include "GEngine/render_pass.h"
+#include "GEngine/texture.h"
 #include <string>
 
 namespace GEngine {
