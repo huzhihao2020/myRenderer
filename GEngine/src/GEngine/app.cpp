@@ -1,13 +1,14 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "app.h"
-#include "render_system.h"
-#include "input_system.h"
-#include "shader.h"
-#include "log.h"
-#include "model.h"
-#include "texture.h"
+#include "GEngine/app.h"
+#include "GEngine/render_system.h"
+#include "GEngine/input_system.h"
+#include "GEngine/shader.h"
+#include "GEngine/log.h"
+#include "GEngine/model.h"
+#include "GEngine/mesh.h"
+#include "GEngine/texture.h"
 
 GEngine::CApp::CApp()
 {
@@ -41,9 +42,10 @@ GLvoid GEngine::CApp::RunMainLoop() {
   auto cube_texture = std::make_shared<CTexture>(texture_path); 
   cube_shader->SetTexture("cube_texture", cube_texture);
 
-  // model
+  // mesh
   std::string model_path("../../assets/backpack/backpack.obj");
-  auto model_backpack = GEngine::CModel(model_path);
+  auto mesh_backpack = std::make_shared<GEngine::CMesh>();
+  mesh_backpack->LoadMesh(model_path);
 
   // render loop
   while (!glfwWindowShouldClose(window_)) {
@@ -76,7 +78,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
     glm::mat4 projection = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetProjectionMatrix();
     glm::mat4 projection_view_model = projection * view * model;
     model_shader->SetMat4("projection_view_model", projection_view_model);
-    model_backpack.Draw(model_shader); // render model]
+    mesh_backpack->Render(model_shader); // render model]
 
     // ticking main GUI
     CSingleton<CRenderSystem>()->GetOrCreateMainUI()->Tick();

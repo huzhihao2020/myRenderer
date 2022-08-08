@@ -1,8 +1,8 @@
-#include "render_system.h"
+#include "GEngine/render_system.h"
 #include <algorithm>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
+#include <stb/stb_image.h>
 
 GEngine::CRenderSystem::~CRenderSystem()
 {
@@ -49,17 +49,17 @@ GEngine::CRenderSystem::GetOrCreateMainUI() {
   return main_UI_;
 }
 
-std::shared_ptr<GEngine::CModel> &
-GEngine::CRenderSystem::GetOrCreateModelByPath(const std::string &path) {
-  std::string::size_type pos = (path.find_last_of('\\') + 1) == 0
-                                   ? path.find_last_of('/') + 1
-                                   : path.find_last_of('\\') + 1;
-  auto filename = path.substr(pos + 1);
-  if (model_map_.find(filename) == model_map_.end()) {
-    model_map_[filename] = std::make_shared<GEngine::CModel>(path);
-  }
-  return model_map_[filename];
-}
+// std::shared_ptr<GEngine::CModel> &
+// GEngine::CRenderSystem::GetOrCreateModelByPath(const std::string &path) {
+//   std::string::size_type pos = (path.find_last_of('\\') + 1) == 0
+//                                    ? path.find_last_of('/') + 1
+//                                    : path.find_last_of('\\') + 1;
+//   auto filename = path.substr(pos + 1);
+//   if (model_map_.find(filename) == model_map_.end()) {
+//     model_map_[filename] = std::make_shared<GEngine::CModel>(path);
+//   }
+//   return model_map_[filename];
+// }
 
 void GEngine::CRenderSystem::RenderCube() {
   glBindVertexArray(GetOrCreateCubeVAO());

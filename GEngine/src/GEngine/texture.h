@@ -7,21 +7,21 @@ namespace GEngine {
 class CSampler {
 public:
   enum class EWrapMode : GLenum {
-    kClampToEdge = GL_CLAMP_TO_EDGE,
+    kClampToEdge  = GL_CLAMP_TO_EDGE,
     kMirrorRepeat = GL_MIRRORED_REPEAT,
-    kRepeat = GL_REPEAT,
+    kRepeat       = GL_REPEAT,
   };
   enum class EMagFilter : GLenum {
     kNearest = GL_NEAREST,
-    kLinear = GL_LINEAR,
+    kLinear  = GL_LINEAR,
   };
   enum class EMinFilter : GLenum {
     kNearest = GL_NEAREST,
-    kLinear = GL_LINEAR,
+    kLinear  = GL_LINEAR,
     kNearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
-    kNearestMipmapLinea = GL_NEAREST_MIPMAP_LINEAR,
-    kLinearMipmapNearest = GL_LINEAR_MIPMAP_NEAREST,
-    kLinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR,
+    kNearestMipmapLinear   = GL_NEAREST_MIPMAP_LINEAR,
+    kLinearMipmapNearest  = GL_LINEAR_MIPMAP_NEAREST,
+    kLinearMipmapLinear   = GL_LINEAR_MIPMAP_LINEAR,
   };
 
   static CSampler Create();
@@ -58,33 +58,33 @@ private:
 class CTexture {
 public:
   enum class ETarget : GLenum {
-    kTexture2D = GL_TEXTURE_2D,
-    kTexture3D = GL_TEXTURE_3D,
+    kTexture2D      = GL_TEXTURE_2D,
+    kTexture3D      = GL_TEXTURE_3D,
     kTextureCubeMap = GL_TEXTURE_CUBE_MAP,
   };
 
   enum class EPixelFormat : GLenum {
-    kRed = GL_RED,
-    kRGB = GL_RGB,
+    kRed  = GL_RED,
+    kRGB  = GL_RGB,
     kRGBA = GL_RGBA,
   };
 
   enum class EWrapMode : GLenum {
-    kClampToEdge = GL_CLAMP_TO_EDGE,
+    kClampToEdge  = GL_CLAMP_TO_EDGE,
     kMirrorRepeat = GL_MIRRORED_REPEAT,
-    kRepeat = GL_REPEAT,
+    kRepeat       = GL_REPEAT,
   };
   enum class EMagFilter : GLenum {
     kNearest = GL_NEAREST,
-    kLinear = GL_LINEAR,
+    kLinear  = GL_LINEAR,
   };
   enum class EMinFilter : GLenum {
     kNearest = GL_NEAREST,
-    kLinear = GL_LINEAR,
+    kLinear  = GL_LINEAR,
     kNearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
-    kNearestMipmapLinea = GL_NEAREST_MIPMAP_LINEAR,
-    kLinearMipmapNearest = GL_LINEAR_MIPMAP_NEAREST,
-    kLinearMipmapLinear = GL_LINEAR_MIPMAP_LINEAR,
+    kNearestMipmapLinear   = GL_NEAREST_MIPMAP_LINEAR,
+    kLinearMipmapNearest  = GL_LINEAR_MIPMAP_NEAREST,
+    kLinearMipmapLinear   = GL_LINEAR_MIPMAP_LINEAR,
   };
 
   CTexture(ETarget target);
@@ -123,7 +123,6 @@ private:
 
   int width_ = 0;
   int height_ = 0;
-  int components_number_ = 0;
 
   EMagFilter mag_filter_ = EMagFilter::kLinear;
   EMinFilter min_filter_ = EMinFilter::kLinear;

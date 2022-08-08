@@ -1,11 +1,11 @@
 #pragma once
-#include "camera.h"
-#include "editor_ui.h"
-#include "glfw_window.h"
-#include "model.h"
-#include "render_pass.h"
-#include "shader.h"
-#include "singleton.h"
+#include "GEngine/camera.h"
+#include "GEngine/editor_ui.h"
+#include "GEngine/glfw_window.h"
+#include "GEngine/model.h"
+#include "GEngine/render_pass.h"
+#include "GEngine/shader.h"
+#include "GEngine/singleton.h"
 #include <initializer_list>
 #include <map>
 #include <memory>
@@ -26,7 +26,7 @@ public:
   std::shared_ptr<CGLFWWindow>  GetOrCreateWindow();
   std::shared_ptr<CCamera>      GetOrCreateMainCamera();
   std::shared_ptr<CEditorUI>    GetOrCreateMainUI();
-  std::shared_ptr<CModel>&      GetOrCreateModelByPath(const std::string& path);
+  // std::shared_ptr<CModel>&      GetOrCreateModelByPath(const std::string& path);
   std::vector<std::shared_ptr<GEngine::CRenderPass>>& GetRenderPass() { return render_passes_; }
 
   void RenderCube();
@@ -49,6 +49,6 @@ private:
   std::shared_ptr<CEditorUI>    main_UI_;     // main UI
 
   std::vector<std::shared_ptr<GEngine::CRenderPass>>  render_passes_;
-  std::map<std::string, std::shared_ptr<CModel>>      model_map_;
+  // std::map<std::string, std::shared_ptr<CModel>>      model_map_;
 };
 } // namespace GEngine

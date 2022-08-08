@@ -1,6 +1,6 @@
+#include "GEngine/texture.h"
+#include "GEngine/log.h"
 #include <glad/glad.h>
-#include "texture.h"
-#include "log.h"
 #include <stb/stb_image.h>
 
 GEngine::CSampler::CSampler() {}
@@ -29,16 +29,18 @@ GEngine::CTexture::CTexture(ETarget target) : target_(target), owner_(true) {
 GEngine::CTexture::CTexture(std::string &path, ETarget target) {
   target_ = target;
   owner_ = true;
+  stbi_set_flip_vertically_on_load(true);
   switch (target) {
   case ETarget::kTexture2D: {
     glGenTextures(1, &id_);
-    unsigned char *data = stbi_load(path.c_str(), &width_, &height_, &components_number_, 0);
+    int components_number = 0;
+    unsigned char *data = stbi_load(path.c_str(), &width_, &height_, &components_number, 0);
     if (data) {
-      if (components_number_ == 1)
+      if (components_number == 1)
         internal_format_ = EPixelFormat::kRed;
-      else if (components_number_ == 3)
+      else if (components_number == 3)
         internal_format_ = EPixelFormat::kRGB;
-      else if (components_number_ == 4)
+      else if (components_number == 4)
         internal_format_ = EPixelFormat::kRGBA;
 
       glBindTexture(GL_TEXTURE_2D, id_);
