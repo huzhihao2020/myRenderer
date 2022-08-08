@@ -1,13 +1,10 @@
 #pragma once
-
-#include <glad/glad.h>
 #include <glm/glm.hpp>
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "texture.h"
+#include "GEngine/texture.h"
 #include <vector>
 #include <tuple>
 #include <map>

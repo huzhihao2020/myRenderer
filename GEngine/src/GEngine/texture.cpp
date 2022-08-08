@@ -1,6 +1,5 @@
 #include "GEngine/texture.h"
 #include "GEngine/log.h"
-#include <glad/glad.h>
 #include <stb/stb_image.h>
 
 GEngine::CSampler::CSampler() {}

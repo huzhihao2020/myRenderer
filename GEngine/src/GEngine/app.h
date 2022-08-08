@@ -1,7 +1,7 @@
 #pragma once
-#include "glfw_window.h"
-#include "singleton.h"
-#include "render_system.h"
+#include "GEngine/glfw_window.h"
+#include "GEngine/singleton.h"
+#include "GEngine/render_system.h"
 #include <memory>
 
 namespace GEngine {
