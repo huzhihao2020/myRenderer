@@ -34,7 +34,7 @@ bool GEngine::CMesh::LoadMesh(std::string &filename) {
   Assimp::Importer importer;
   auto flags = aiProcess_Triangulate | 
                aiProcess_GenSmoothNormals |
-               aiProcess_FlipUVs |
+              //  aiProcess_FlipUVs |
                aiProcess_CalcTangentSpace|
                aiProcess_JoinIdenticalVertices;
   const aiScene* ai_scene = importer.ReadFile(filename.c_str(), flags);
@@ -149,7 +149,7 @@ bool GEngine::CMesh::ParseMaterials(const aiScene *scene, const std::string& fil
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_HEIGHT, materials_[i]->normal_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_BASE_COLOR, materials_[i]->basecolor_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE_ROUGHNESS, materials_[i]->roughness_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_METALNESS, materials_[i]->mettalic_texture_);
+    LoadMaterialTexture(p_material, filedir, i, aiTextureType_METALNESS, materials_[i]->metallic_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_AMBIENT_OCCLUSION, materials_[i]->ao_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_EMISSION_COLOR, materials_[i]->emissive_texture_);
   }
@@ -166,6 +166,14 @@ bool GEngine::CMesh::LoadMaterialTexture(const aiMaterial *material,
     aiString ai_path;
     if (material->GetTexture(type, 0, &ai_path, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
       std::string p(ai_path.data);
+
+      // replace "\\" in p with '/'
+      for(int i=0; i<p.length(); i++) {
+        if(p[i]=='\\') {
+          p[i] = '/';
+        }
+      }
+
       std::string full_path = filedir + "/" + p;
 
       texture = std::make_shared<CTexture>(full_path, CTexture::ETarget::kTexture2D);
@@ -184,12 +192,31 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
   glBindVertexArray(VAO_);
   for (int i = 0; i < meshes_.size(); i++) {
     auto material_index = meshes_[i].material_index_;
+    // common
     if (materials_[material_index]->diffuse_texture_ != nullptr) {
       shader->SetTexture("texture_diffuse", materials_[material_index]->diffuse_texture_);
     }
     if (materials_[material_index]->normal_texture_ != nullptr) {
       shader->SetTexture("texture_normal", materials_[material_index]->normal_texture_);
     }
+    // pbr
+    if (materials_[material_index]->basecolor_texture_ != nullptr) {
+      shader->SetTexture("texture_base_color", materials_[material_index]->basecolor_texture_);
+    }
+    if (materials_[material_index]->metallic_texture_ != nullptr) {
+      shader->SetTexture("texture_metallic", materials_[material_index]->metallic_texture_);
+    }
+    if (materials_[material_index]->roughness_texture_ != nullptr) {
+      shader->SetTexture("texture_roughness", materials_[material_index]->roughness_texture_);
+    }
+    if (materials_[material_index]->ao_texture_ != nullptr) {
+      shader->SetTexture("texture_ao", materials_[material_index]->ao_texture_);
+    }
+    if (materials_[material_index]->emissive_texture_ != nullptr) {
+      shader->SetTexture("texture_emissive", materials_[material_index]->emissive_texture_);
+    }
+    glEnable(GL_DEPTH_TEST);
+    shader->Use();
     glDrawElementsBaseVertex(GL_TRIANGLES,
                             meshes_[i].num_indices_,
                             GL_UNSIGNED_INT,

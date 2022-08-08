@@ -38,12 +38,15 @@ GLvoid GEngine::CApp::RunMainLoop() {
   auto model_shader = std::make_shared<CShader>(std::string("../../shaders/model_VS.glsl"), 
                                                 std::string("../../shaders/model_FS.glsl"));
   // texture
-  std::string texture_path = "../../assets/textures/marble.jpg";
-  auto cube_texture = std::make_shared<CTexture>(texture_path); 
-  cube_shader->SetTexture("cube_texture", cube_texture);
+  // std::string texture_path = "../../assets/textures/marble.jpg";
+  // auto cube_texture = std::make_shared<CTexture>(texture_path); 
+  // cube_shader->SetTexture("cube_texture", cube_texture);
 
   // mesh
-  std::string model_path("../../assets/backpack/backpack.obj");
+  // std::string model_path("../../assets/model/glTF/DamagedHelmet.gltf");
+  // std::string model_path("../../assets/model/backpack/backpack.obj");
+  std::string model_path("../../assets/model/sponza/Scale300Sponza.obj");
+  // std::string model_path("../../assets/model/Lucy/Lucy.obj"); // Large model
   auto mesh_backpack = std::make_shared<GEngine::CMesh>();
   mesh_backpack->LoadMesh(model_path);
 
@@ -68,12 +71,12 @@ GLvoid GEngine::CApp::RunMainLoop() {
       }
     }
     // ticking the objects
-    cube_shader->Use();
-    CSingleton<CRenderSystem>()->RenderCube(cube_shader); // render cube
+    // cube_shader->Use();
+    // CSingleton<CRenderSystem>()->RenderCube(cube_shader); // render cube
     model_shader->Use();// [render model
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2, 2, 2));
-    model = glm::scale(model, glm::vec3(0.5, 0.5, 0.5));
+    model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
     glm::mat4 view = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetViewMatrix();
     glm::mat4 projection = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetProjectionMatrix();
     glm::mat4 projection_view_model = projection * view * model;

@@ -128,9 +128,9 @@ private:
 
   EMagFilter mag_filter_ = EMagFilter::kLinear;
   EMinFilter min_filter_ = EMinFilter::kLinear;
-  EWrapMode s_wrap_mode_ = EWrapMode::kClampToEdge;
-  EWrapMode t_wrap_mode_ = EWrapMode::kClampToEdge;
-  EWrapMode r_wrap_mode_ = EWrapMode::kClampToEdge;
+  EWrapMode s_wrap_mode_ = EWrapMode::kRepeat;
+  EWrapMode t_wrap_mode_ = EWrapMode::kRepeat;
+  EWrapMode r_wrap_mode_ = EWrapMode::kRepeat;
 
   bool has_mipmap_ = false;
 };
