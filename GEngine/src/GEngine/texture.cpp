@@ -25,10 +25,10 @@ GEngine::CTexture::CTexture(ETarget target) : target_(target), owner_(true) {
   glGenTextures(1, &id_);
 }
 
-GEngine::CTexture::CTexture(std::string &path, ETarget target) {
+GEngine::CTexture::CTexture(std::string &path, ETarget target, bool need_flip) {
   target_ = target;
   owner_ = true;
-  stbi_set_flip_vertically_on_load(true);
+  stbi_set_flip_vertically_on_load(need_flip);
   switch (target) {
   case ETarget::kTexture2D: {
     glGenTextures(1, &id_);

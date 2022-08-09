@@ -48,7 +48,7 @@ void GEngine::CCamera::Tick() {
     position_ -= right_ * delta_time * move_speed_;
   }
   if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_UP)) {
-    move_speed_ = std::min(move_speed_ + 0.5, 15.0);
+    move_speed_ = std::min(move_speed_ + 0.5, 20.0);
   }
   if (CSingleton<CInputSystem>()->GetKeyStatus(GLFW_KEY_DOWN)) {
     move_speed_ = std::max(move_speed_ - 0.5, 0.5);

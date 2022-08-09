@@ -10,6 +10,7 @@
 #define POISITION_LOCATION  0
 #define NORMAL_LOCATION     1
 #define TEX_COORD_LOCATION  2
+#define TANGENT_LOCATION    3
 
 GEngine::CMesh::CMesh() {}
 
@@ -34,7 +35,7 @@ bool GEngine::CMesh::LoadMesh(std::string &filename) {
   Assimp::Importer importer;
   auto flags = aiProcess_Triangulate | 
                aiProcess_GenSmoothNormals |
-              //  aiProcess_FlipUVs |
+               aiProcess_FlipUVs | 
                aiProcess_CalcTangentSpace|
                aiProcess_JoinIdenticalVertices;
   const aiScene* ai_scene = importer.ReadFile(filename.c_str(), flags);
@@ -69,15 +70,20 @@ bool GEngine::CMesh::InitFromScene(const aiScene* scene, std::string &filename) 
   for(int i=0; i<meshes_.size(); i++) {
     const aiVector3D zero3f(0.0f, 0.0f, 0.0f);
     const aiVector3D default_normal(0.0f, 1.0f, 0.0f);
+    const aiVector3D default_tangent(0.0f, 0.0f, 1.0f);
+    const aiVector3D default_bitangent(1.0f, 0.0f,0.0f);
     auto ai_mesh = scene->mMeshes[i];
     for(int jj=0; jj<ai_mesh->mNumVertices; jj++) {
       const auto& a_pos = ai_mesh->mVertices[jj];
       const auto& a_normal = ai_mesh->HasNormals() ? ai_mesh->mNormals[jj] : default_normal;
       const auto& a_texcoord = ai_mesh->HasTextureCoords(0) ? ai_mesh->mTextureCoords[0][jj] : zero3f;
+      const auto& a_tangent = ai_mesh->HasTangentsAndBitangents() ? ai_mesh->mTangents[jj] : default_tangent;
+      const auto& a_bitangent = ai_mesh->HasTangentsAndBitangents() ? ai_mesh->mBitangents[jj] : default_bitangent;
 
       positions_.push_back(glm::vec3(a_pos.x, a_pos.y, a_pos.z));
       normals_.push_back(glm::vec3(a_normal.x, a_normal.y, a_normal.z));
       texcoords_.push_back(glm::vec2(a_texcoord.x, a_texcoord.y));
+      tangents_.push_back(glm::vec3(a_tangent.x, a_tangent.y, a_tangent.z));
     }
     for(int kk=0; kk<ai_mesh->mNumFaces; kk++) {
       const auto& face = ai_mesh->mFaces[kk];
@@ -110,6 +116,11 @@ bool GEngine::CMesh::InitFromScene(const aiScene* scene, std::string &filename) 
   glBufferData(GL_ARRAY_BUFFER, sizeof(texcoords_[0]) * texcoords_.size(), &texcoords_[0], GL_STATIC_DRAW);
   glEnableVertexAttribArray(TEX_COORD_LOCATION);
   glVertexAttribPointer(TEX_COORD_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buffers_[TANGENT]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(tangents_[0]) * tangents_.size(), &tangents_[0], GL_STATIC_DRAW);
+  glEnableVertexAttribArray(TANGENT_LOCATION);
+  glVertexAttribPointer(TANGENT_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers_[INDEX_BUFFER]);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_[0]) * indices_.size(), &indices_[0], GL_STATIC_DRAW);
@@ -178,10 +189,10 @@ bool GEngine::CMesh::LoadMaterialTexture(const aiMaterial *material,
 
       texture = std::make_shared<CTexture>(full_path, CTexture::ETarget::kTexture2D);
       if (!texture) {
-        GE_ERROR("Error loading texture '{0}'", full_path);
+        GE_ERROR("Error loading texture '{0}' at index '{1}'", full_path, i);
         return false;
       }
-      GE_INFO("Loaded texture '{0}' at index '{1}'", full_path, i);
+      GE_INFO("Load texture '{0}' at index '{1}'", full_path, i);
     }
   }
   return true;
@@ -196,9 +207,11 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
     if (materials_[material_index]->diffuse_texture_ != nullptr) {
       shader->SetTexture("texture_diffuse", materials_[material_index]->diffuse_texture_);
     }
+    shader->SetBool("has_normal_texture", false);
     if (materials_[material_index]->normal_texture_ != nullptr) {
+      shader->SetBool("has_normal_texture", true);
       shader->SetTexture("texture_normal", materials_[material_index]->normal_texture_);
-    }
+    } 
     // pbr
     if (materials_[material_index]->basecolor_texture_ != nullptr) {
       shader->SetTexture("texture_base_color", materials_[material_index]->basecolor_texture_);

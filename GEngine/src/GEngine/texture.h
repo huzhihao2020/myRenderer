@@ -90,7 +90,7 @@ public:
   };
 
   CTexture(ETarget target);
-  CTexture(std::string& path, ETarget target = ETarget::kTexture2D);
+  CTexture(std::string& path, ETarget target = ETarget::kTexture2D, bool need_flip = false);
   CTexture(ETarget target, unsigned int id, int height, int width);
   ~CTexture();
 

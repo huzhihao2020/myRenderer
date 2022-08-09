@@ -5,7 +5,7 @@
 namespace GEngine {
 class CLight {
 public:
-  enum class LightType { Ambient, Omni, Spot, Directional };
+  enum class LightType : uint8_t { Ambient, Omni, Spot, Directional };
 
   CLight();
   CLight(LightType type);

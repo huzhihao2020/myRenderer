@@ -33,14 +33,14 @@ GLvoid GEngine::CApp::Init()
 
 GLvoid GEngine::CApp::RunMainLoop() {
   glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-  auto cube_shader  = std::make_shared<CShader>(std::string("../../shaders/vert.glsl"),
-                                                std::string("../../shaders/frag.glsl"));
-  auto model_shader = std::make_shared<CShader>(std::string("../../shaders/model_VS.glsl"), 
-                                                std::string("../../shaders/model_FS.glsl"));
+  auto basic_shader  = std::make_shared<CShader>(std::string("../../shaders/vert.glsl"),
+                                                 std::string("../../shaders/frag.glsl"));
+  auto sponza_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_VS.glsl"), 
+                                                 std::string("../../shaders/sponza_FS.glsl"));
   // texture
   // std::string texture_path = "../../assets/textures/marble.jpg";
-  // auto cube_texture = std::make_shared<CTexture>(texture_path); 
-  // cube_shader->SetTexture("cube_texture", cube_texture);
+  // auto marble_texture = std::make_shared<CTexture>(texture_path); 
+  // basic_shader->SetTexture("diffuse_marble", marble_texture);
 
   // mesh
   // std::string model_path("../../assets/model/glTF/DamagedHelmet.gltf");
@@ -71,17 +71,19 @@ GLvoid GEngine::CApp::RunMainLoop() {
       }
     }
     // ticking the objects
-    // cube_shader->Use();
-    // CSingleton<CRenderSystem>()->RenderCube(cube_shader); // render cube
-    model_shader->Use();// [render model
+    basic_shader->Use();
+    // CSingleton<CRenderSystem>()->RenderCube(basic_shader); // render cube
+    CSingleton<CRenderSystem>()->RenderSphere(basic_shader); // render sphere
+    sponza_shader->Use();// [render model
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2, 2, 2));
+    // model = glm::translate(model, glm::vec3(2, 2, 2));
     model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
     glm::mat4 view = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetViewMatrix();
     glm::mat4 projection = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetProjectionMatrix();
-    glm::mat4 projection_view_model = projection * view * model;
-    model_shader->SetMat4("projection_view_model", projection_view_model);
-    mesh_backpack->Render(model_shader); // render model]
+    sponza_shader->SetMat4("u_model", model);
+    sponza_shader->SetMat4("u_view", view);
+    sponza_shader->SetMat4("u_projection", projection);
+    mesh_backpack->Render(sponza_shader); // render model]
 
     // ticking main GUI
     CSingleton<CRenderSystem>()->GetOrCreateMainUI()->Tick();

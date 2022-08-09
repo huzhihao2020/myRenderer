@@ -14,16 +14,17 @@ namespace GEngine {
 class CMesh {
 public:
   // for Structure of Arrays
-  enum BUFFER_TYPE {
+  enum BUFFER_TYPE : uint8_t {
     INDEX_BUFFER = 0u,
-    POSITION     = 1u,
-    NORMAL       = 2u,
-    TEXCOORD     = 3u,
+    POSITION,
+    NORMAL,
+    TEXCOORD,
+    TANGENT,
     // MVP_MAT & WORLD_MAT is only for instancing
-    MVP_MAT      = 4u,
-    WORLD_MAT    = 5u,
+    // MVP_MAT,
+    // WORLD_MAT,
     // NUM_BUFFERS is the numbers of buffers, not a buffer type
-    NUM_BUFFERS  = 6u, 
+    NUM_BUFFERS,
   };
 
   // MeshEntry stores the sub-components of the model
@@ -77,6 +78,7 @@ private:
   std::vector<glm::vec3> positions_;
   std::vector<glm::vec3> normals_;
   std::vector<glm::vec2> texcoords_;
+  std::vector<glm::vec3> tangents_;
   std::vector<unsigned int> indices_;
 };
 
