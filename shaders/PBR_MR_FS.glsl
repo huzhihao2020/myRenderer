@@ -1,17 +1,45 @@
 #version 410
 out vec4 FragColor;
 
-in vec2 TexCoords;
+in VS_OUT {
+    vec3 FragPosViewspace;
+    vec2 TexCoords;
+    mat3 TBN;
+    vec3 Normal;
+    struct PointLight {
+        vec3 position;
+        vec3 color;
+        float intensity;
+        float attenuation;
+    }lights[4];
+}fs_in;
 
-uniform sampler2D texture_diffuse;
 uniform sampler2D texture_normal;
+uniform bool has_normal_texture;
 uniform sampler2D texture_base_color;
+uniform bool has_base_color_texture;
 uniform sampler2D texture_roughness;
+uniform bool has_roughness_texture;
 uniform sampler2D texture_metallic;
+uniform bool has_metallic_texture;
 uniform sampler2D texture_ao;
+uniform bool has_ao_texture;
 uniform sampler2D texture_emissive;
 
+uniform float u_metallic;
+uniform float u_roughness;
+uniform vec3 u_basecolor;
+
 #define PI 3.1415926
+
+struct FragAttribute {
+  vec3 base_color;
+  vec3 normal;
+  float roughness;
+  float metalness;
+  float ao;
+  vec3 emissive;
+}frag_attribute;
 
 vec3 ToLinear(vec3 v) { return pow(v,     vec3(2.2)); }
 vec3 ToSRGB(vec3 v)   { return pow(v, vec3(1.0/2.2)); }
@@ -73,29 +101,27 @@ float GeometryHammon(float NdotV, float NdotL, float a) {
 // TODO: 1. replace ambient lighting with IBL (environment lighting)
 //       2. improve tone mapping method for hdr effect
 
-vec3 CookTorranceBRDF(vec3 viewdir, vec3 normal, vec3 lightdir) {
-  float NdotL = max(dot(normal, lightdir), 0.0);
-  float NdotV = max(dot(normal, viewdir), 0.0);
+vec3 CookTorranceBRDF(FragAttribute frag_attribute, vec3 viewdir, vec3 lightdir, vec3 radiance) {
+  float NdotL = max(dot(frag_attribute.normal, lightdir), 0.0);
+  float NdotV = max(dot(frag_attribute.normal, viewdir), 0.0);
   vec3 bisector_h = normalize(lightdir + viewdir);
-  float HdotN = max(dot(bisector_h, normal), 0.01);
+  float HdotN = max(dot(bisector_h, frag_attribute.normal), 0.01);
   float HdotV = max(dot(bisector_h, viewdir), 0.01);
 
-  vec3 base_color = ToLinear(texture(texture_base_color, TexCoords).rgb);
-  float metalness = texture(texture_metallic, TexCoords).r;
-  vec3 diffuse_brdf = (1.0 - metalness) * base_color / PI;
+  vec3 diffuse_brdf = (1.0 - frag_attribute.metalness) * frag_attribute.base_color / PI;
 
   // specular
-  float roughness = texture(roughness_texture, TexCoords).r;
-  float D = DistributionGGXTR(HdotN, roughness);
+  float D = DistributionGGXTR(HdotN, frag_attribute.roughness);
 
   vec3 F0 = vec3(0.04);
-  F0 = mix(F0, base_color, metalness);
-  vec3 F = FresnelUEApprox(HdotV, F0);
+  F0 = mix(F0, frag_attribute.base_color, frag_attribute.metalness);
+  // vec3 F = FresnelUEApprox(HdotV, F0);
+  vec3 F = FresnelSchlick(HdotV, F0);
   vec3 ks = F;
   vec3 kd = vec3(1.0) - ks;
 
   // (a+1)^2/8 for direct lighting
-  float k = (roughness + 1.0) * (roughness + 1.0) / 8.0; 
+  float k = (frag_attribute.roughness + 1.0) * (frag_attribute.roughness + 1.0) / 8.0; 
   float G = PartialGeometryGGX(NdotL, k) * PartialGeometryGGX(NdotV, k);
 
   float denom = 4.0 * max(NdotL * NdotV, 0.0001);
@@ -103,15 +129,48 @@ vec3 CookTorranceBRDF(vec3 viewdir, vec3 normal, vec3 lightdir) {
 
   vec3 brdf = (diffuse_brdf * kd  + specular_brdf);
 
-  vec3 color = brdf * NdotL;
+  vec3 color = brdf * NdotL * radiance;
   
   return color;
 }
 
 void main()
 { 
-    vec3 lightPos = vec3(3, 3, 3);
-    CookTorranceBRDF(view, normal, light);
-    FragColor = texture(texture_diffuse, TexCoords);
-    // FragColor = texture(texture_normal, TexCoords);
+  // frag_attribute.normal = fs_in.Normal; 
+  frag_attribute.normal = normalize(fs_in.Normal); 
+  if(has_normal_texture) {
+      frag_attribute.normal = texture(texture_normal, fs_in.TexCoords).rgb;
+      frag_attribute.normal = frag_attribute.normal * 2.0 - vec3(1.0);
+      frag_attribute.normal = normalize(fs_in.TBN * frag_attribute.normal);
+  }
+  frag_attribute.base_color = u_basecolor;
+  if(has_base_color_texture) {
+    frag_attribute.base_color = ToLinear(texture(texture_base_color, fs_in.TexCoords).rgb);
+  } 
+  frag_attribute.ao = 0.0;
+  if(has_ao_texture) {
+    frag_attribute.ao = texture(texture_ao, fs_in.TexCoords).r;
+  }
+  frag_attribute.metalness = u_metallic;
+  if(has_metallic_texture) {
+    frag_attribute.metalness = texture(texture_metallic, fs_in.TexCoords).r;
+  }
+  frag_attribute.roughness = u_roughness;
+  if(has_roughness_texture) {
+    frag_attribute.roughness = texture(texture_roughness, fs_in.TexCoords).r;
+  }
+
+  vec3 Lo = vec3(0.0);
+  for(int i=0; i<4; i++) {
+    vec3 light_dir = normalize(fs_in.lights[i].position - fs_in.FragPosViewspace);
+    vec3 view_dir = normalize(-fs_in.FragPosViewspace);
+    vec3 radiance = fs_in.lights[i].color * fs_in.lights[i].attenuation * fs_in.lights[i].intensity;
+    Lo += CookTorranceBRDF(frag_attribute, view_dir, light_dir, radiance);
+  }
+  vec3 ambient = vec3(0.03) * frag_attribute.base_color;
+  Lo += ambient;
+  // Lo = ACESToneMapping(Lo, 1.0);
+  Lo = ReinhardToneMapping(Lo, 1.0);
+  Lo = ToSRGB(Lo);
+  FragColor = vec4(Lo, 1.0);
 }

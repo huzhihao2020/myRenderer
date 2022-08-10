@@ -248,22 +248,26 @@ void GEngine::CRenderSystem::RenderSphere(std::shared_ptr<CShader> shader) {
     std::vector<glm::vec3> positions;
     std::vector<glm::vec2> uv;
     std::vector<glm::vec3> normals;
+    std::vector<glm::vec3> tangents;
     std::vector<unsigned int> indices;
 
-    const unsigned int X_SEGMENTS = 48;
-    const unsigned int Y_SEGMENTS = 32;
+    const unsigned int X_SEGMENTS = 64;
+    const unsigned int Y_SEGMENTS = 64;
     const float PI = 3.14159265359f;
     for (unsigned int x = 0; x <= X_SEGMENTS; ++x) {
       for (unsigned int y = 0; y <= Y_SEGMENTS; ++y) {
         float xSegment = (float)x / (float)X_SEGMENTS;
         float ySegment = (float)y / (float)Y_SEGMENTS;
-        float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-        float yPos = std::cos(ySegment * PI);
-        float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+        float phi = xSegment * 2.0f * PI;
+        float theta = ySegment * PI;
+        float xPos = std::cos(phi) * std::sin(theta);
+        float yPos = std::cos(theta);
+        float zPos = std::sin(phi) * std::sin(theta);
 
         positions.push_back(glm::vec3(xPos, yPos, zPos));
         uv.push_back(glm::vec2(xSegment, ySegment));
         normals.push_back(glm::vec3(xPos, yPos, zPos));
+        tangents.push_back(glm::vec3(zPos, 0, -xPos));
       }
     }
 
@@ -299,25 +303,30 @@ void GEngine::CRenderSystem::RenderSphere(std::shared_ptr<CShader> shader) {
         data.push_back(uv[i].x);
         data.push_back(uv[i].y);
       }
+      if(tangents.size() > 0) {
+        data.push_back(tangents[i].x);
+        data.push_back(tangents[i].y);
+        data.push_back(tangents[i].z);
+      }
     }
+    
     glBindVertexArray(sphere_VAO_);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-    unsigned int stride = (3 + 2 + 3) * sizeof(float);
+    unsigned int stride = (3 + 2 + 3 + 3) * sizeof(float);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void *)(8 * sizeof(float)));
   }
-  glm::mat4 model = glm::mat4(1.0f);
-  glm::mat4 view = GetOrCreateMainCamera()->GetViewMatrix();
-  glm::mat4 projection = GetOrCreateMainCamera()->GetProjectionMatrix();
-  glm::mat4 projection_view_model = projection * view * model;
-  shader->SetMat4("projection_view_model", projection_view_model);
+
+  glEnable(GL_DEPTH_TEST);
   glBindVertexArray(sphere_VAO_);
   glDrawElements(GL_TRIANGLE_STRIP, sphere_index_count_, GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);

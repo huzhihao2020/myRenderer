@@ -14,7 +14,7 @@ GEngine::CCamera::CCamera(glm::vec3 position, float fov)
       position_(position),
       is_ortho_(false),
       near_(0.1f),
-      far_(300.0f) {
+      far_(100.0f) {
   // do nothing
 }
 
