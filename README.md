@@ -10,7 +10,15 @@ A toy renderer
 
 The `.xcodeproj` file will be written to `build/`
 
-![GEngine image](GEngine.jpeg)
+## Feature
+
+* Model Loading
+
+![GEngine .obj model image](GEngine-OBJ.jpeg)
+
+* PBR 
+
+![GEngine .obj model image](GEngine-PBR.jpeg)
 
 ## Files
 
