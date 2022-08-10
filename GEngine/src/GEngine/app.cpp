@@ -47,8 +47,8 @@ GLvoid GEngine::CApp::RunMainLoop() {
   // std::string model_path("../../assets/model/backpack/backpack.obj");
   std::string model_path("../../assets/model/sponza/Scale300Sponza.obj");
   // std::string model_path("../../assets/model/Lucy/Lucy.obj"); // Large model
-  auto mesh_backpack = std::make_shared<GEngine::CMesh>();
-  mesh_backpack->LoadMesh(model_path);
+  auto mesh_sponza = std::make_shared<GEngine::CMesh>();
+  mesh_sponza->LoadMesh(model_path);
 
   // render loop
   while (!glfwWindowShouldClose(window_)) {
@@ -83,7 +83,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
     sponza_shader->SetMat4("u_model", model);
     sponza_shader->SetMat4("u_view", view);
     sponza_shader->SetMat4("u_projection", projection);
-    mesh_backpack->Render(sponza_shader); // render model]
+    mesh_sponza->Render(sponza_shader); // render model]
 
     // ticking main GUI
     CSingleton<CRenderSystem>()->GetOrCreateMainUI()->Tick();

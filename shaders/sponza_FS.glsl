@@ -15,12 +15,18 @@ in VS_OUT {
 
 uniform sampler2D texture_diffuse;
 uniform sampler2D texture_normal;
+uniform sampler2D texture_alpha;
 uniform bool has_normal_texture;
+uniform bool has_alpha_texture;
 
 void main()
 {
+    if(has_alpha_texture) {
+        float alpha = texture(texture_alpha, fs_in.TexCoords).r;
+        if(alpha<0.9) discard;
+    }
     vec3 basecolor = texture(texture_diffuse, fs_in.TexCoords).rgb;
-    vec3 normal = fs_in.Normal; // 
+    vec3 normal = fs_in.Normal; 
     if(has_normal_texture) {
         normal = texture(texture_normal, fs_in.TexCoords).rgb;
         normal = normal * 2.0 - vec3(1.0);

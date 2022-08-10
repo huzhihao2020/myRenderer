@@ -25,8 +25,7 @@ out VS_OUT {
 void main()
 {
     mat4 view_model_transform = u_view * u_model;
-    vec4 FragPosViewspaceVec4 = view_model_transform * vec4(aPos, 1.0);
-    vs_out.FragPosViewspace = FragPosViewspaceVec4.xyz;
+    vs_out.FragPosViewspace = (view_model_transform * vec4(aPos, 1.0)).xyz;
 
     vec3 N = normalize(mat3(transpose(inverse(view_model_transform))) * aNormal);
     vs_out.Normal = N;

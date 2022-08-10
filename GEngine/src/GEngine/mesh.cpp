@@ -2,6 +2,7 @@
 #include "GEngine/log.h"
 #include "GEngine/material.h"
 #include "GEngine/shader.h"
+#include "assimp/material.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/vector3.h>
@@ -158,6 +159,7 @@ bool GEngine::CMesh::ParseMaterials(const aiScene *scene, const std::string& fil
     // diffuse texture
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE, materials_[i]->diffuse_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_HEIGHT, materials_[i]->normal_texture_);
+    LoadMaterialTexture(p_material, filedir, i, aiTextureType_OPACITY, materials_[i]->alpha_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_BASE_COLOR, materials_[i]->basecolor_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE_ROUGHNESS, materials_[i]->roughness_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_METALNESS, materials_[i]->metallic_texture_);
@@ -212,6 +214,12 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
       shader->SetBool("has_normal_texture", true);
       shader->SetTexture("texture_normal", materials_[material_index]->normal_texture_);
     } 
+    // discard if alpha!=1, blending not implemented
+    shader->SetBool("has_alpha_texture", false);
+    if (materials_[material_index]->alpha_texture_ != nullptr) {
+      shader->SetBool("has_alpha_texture", true);
+      shader->SetTexture("texture_alpha", materials_[material_index]->alpha_texture_);
+    }
     // pbr
     if (materials_[material_index]->basecolor_texture_ != nullptr) {
       shader->SetTexture("texture_base_color", materials_[material_index]->basecolor_texture_);

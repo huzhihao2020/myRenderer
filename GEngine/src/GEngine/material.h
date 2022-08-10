@@ -17,6 +17,7 @@ public:
   //Common
   std::shared_ptr<CTexture> diffuse_texture_ = nullptr;
   std::shared_ptr<CTexture> normal_texture_ = nullptr;
+  std::shared_ptr<CTexture> alpha_texture_ = nullptr;
 
   // Phong
   float shiness = 32.0f;
