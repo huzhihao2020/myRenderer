@@ -36,11 +36,12 @@ GEngine::CTexture::CTexture(std::string &path, ETarget target, bool need_flip) {
     unsigned char *data = stbi_load(path.c_str(), &width_, &height_, &components_number, 0);
     if (data) {
       if (components_number == 1)
-        external_format_ = EPixelFormat::kRed;
+        internal_format_ = external_format_ = EPixelFormat::kRed;
+        
       else if (components_number == 3)
-        external_format_ = EPixelFormat::kRGB;
+        internal_format_ = external_format_ = EPixelFormat::kRGB;
       else if (components_number == 4)
-        external_format_ = EPixelFormat::kRGBA;
+        internal_format_  = external_format_ = EPixelFormat::kRGBA;
 
       glBindTexture(GL_TEXTURE_2D, id_);
       glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(internal_format_),

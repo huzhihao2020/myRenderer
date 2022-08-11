@@ -47,7 +47,7 @@ public:
   CMesh();
   ~CMesh();
   
-  bool LoadMesh(std::string &filename);
+  bool LoadMesh(const std::string &filename);
   void Render(std::shared_ptr<GEngine::CShader> shader);
   void Clear();
 
@@ -62,7 +62,7 @@ private:
   unsigned int buffers_[NUM_BUFFERS] = {0};
   void SetupMesh();
   
-  bool InitFromScene(const aiScene* scene, std::string &filename);
+  bool InitFromScene(const aiScene* scene, const std::string &filename);
 
   std::tuple<unsigned int, unsigned int>
   CountTotalVerticesAndIndices(const aiScene *scene);

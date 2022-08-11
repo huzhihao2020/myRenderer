@@ -34,6 +34,7 @@ public:
   std::shared_ptr<CTexture> metallic_texture_  = nullptr;
   std::shared_ptr<CTexture> ao_texture_        = nullptr;
   std::shared_ptr<CTexture> emissive_texture_  = nullptr;
+  std::shared_ptr<CTexture> unknown_texture_   = nullptr;
 
   // todo: Disney Principled BSDF
 

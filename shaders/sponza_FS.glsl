@@ -49,5 +49,6 @@ void main()
         lighting = lighting + (ambient + diffuse + specular) * fs_in.lights[i].attenuation;
     }
     FragColor = vec4(lighting, 1.0);
+    // FragColor = vec4(normal, 1.0);
     // FragColor = texture(texture_diffuse, fs_in.TexCoords);
 }

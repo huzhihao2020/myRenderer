@@ -2,7 +2,9 @@
 #include "GEngine/log.h"
 #include "GEngine/material.h"
 #include "GEngine/shader.h"
+#include "assimp/GltfMaterial.h"
 #include "assimp/material.h"
+#include "assimp/types.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/vector3.h>
@@ -17,7 +19,7 @@ GEngine::CMesh::CMesh() {}
 
 GEngine::CMesh::~CMesh() {}
 
-bool GEngine::CMesh::LoadMesh(std::string &filename) {
+bool GEngine::CMesh::LoadMesh(const std::string &filename) {
   bool success = false;
 
   // release previous loaded mesh
@@ -51,7 +53,7 @@ bool GEngine::CMesh::LoadMesh(std::string &filename) {
   return success;
 }
 
-bool GEngine::CMesh::InitFromScene(const aiScene* scene, std::string &filename) {
+bool GEngine::CMesh::InitFromScene(const aiScene* scene, const std::string &filename) {
   meshes_.resize(scene->mNumMeshes);
   materials_.resize(scene->mNumMaterials);
 
@@ -155,15 +157,20 @@ bool GEngine::CMesh::ParseMaterials(const aiScene *scene, const std::string& fil
   // load textures
   for (int i = 0; i < scene->mNumMaterials; i++) {
     const aiMaterial *p_material = scene->mMaterials[i];
-    // diffuse texture
+    // diffuse & basecolor texture
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE, materials_[i]->diffuse_texture_);
+    LoadMaterialTexture(p_material, filedir, i, aiTextureType_BASE_COLOR, materials_[i]->basecolor_texture_);
+    // some models mess up HeightMap and NormalMap
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_HEIGHT, materials_[i]->normal_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_OPACITY, materials_[i]->alpha_texture_);
-    // LoadMaterialTexture(p_material, filedir, i, aiTextureType_BASE_COLOR, materials_[i]->basecolor_texture_);
+    LoadMaterialTexture(p_material, filedir, i, aiTextureType_NORMALS, materials_[i]->normal_texture_);
+    // maybe the [alpha] channel in diffuse texture
+    LoadMaterialTexture(p_material, filedir, i, aiTextureType_OPACITY, materials_[i]->alpha_texture_); 
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE_ROUGHNESS, materials_[i]->roughness_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_METALNESS, materials_[i]->metallic_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_AMBIENT_OCCLUSION, materials_[i]->ao_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_EMISSION_COLOR, materials_[i]->emissive_texture_);
+    // roughness-metallic for glTF format (g,b channel)
+    LoadMaterialTexture(p_material, filedir, i, aiTextureType_UNKNOWN, materials_[i]->unknown_texture_);
   }
   return true;
 }
@@ -242,6 +249,9 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
     }
     if (materials_[material_index]->emissive_texture_ != nullptr) {
       shader->SetTexture("texture_emissive", materials_[material_index]->emissive_texture_);
+    }
+    if (materials_[material_index]->unknown_texture_ != nullptr) {
+      shader->SetTexture("texture_metallic_roughness", materials_[material_index]->unknown_texture_);
     }
     glEnable(GL_DEPTH_TEST);
     shader->Use();
