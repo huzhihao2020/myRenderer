@@ -38,10 +38,11 @@ void main()
 
     // light_pos in view space
     // vs_out.lights[0].position = vec3( 0.0, 0.0, 10.0);
-    vs_out.lights[0].position = vec3(-10.0,  10.0, 10.0);
-    vs_out.lights[1].position = vec3( 10.0,  10.0, 10.0);
-    vs_out.lights[2].position = vec3(-10.0, -10.0, 10.0);
-    vs_out.lights[3].position = vec3( 10.0, -10.0, 10.0);
+    float x = 7.5;
+    vs_out.lights[0].position = vec3(-x,  x, 10.0);
+    vs_out.lights[1].position = vec3( x,  x, 10.0);
+    vs_out.lights[2].position = vec3(-x, -x, 10.0);
+    vs_out.lights[3].position = vec3( x, -x, 10.0);
     for(int i=0; i<4; i++) {
         vs_out.lights[i].color = vec3(0.7);
         vs_out.lights[i].intensity = 300.0;

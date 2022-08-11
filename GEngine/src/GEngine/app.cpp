@@ -128,7 +128,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
           CSingleton<CRenderSystem>()->RenderSphere(pbr_shader);
         }
       }
-      float x = 10.0f;
+      float x = 7.5f;
       std::vector<glm::vec3> lights_pos = {
         glm::vec3(-x,  x, 10.0),
         glm::vec3(-x, -x, 10.0),
@@ -141,7 +141,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
       for(int i=0; i<4; i++) {
           model = glm::mat4(1.0f);
           model = glm::translate(model, lights_pos[i]);
-          model = glm::scale(model, glm::vec3(0.1f));
+          model = glm::scale(model, glm::vec3(0.5f));
           light_shader->SetMat4("u_model", model);
           CSingleton<CRenderSystem>()->RenderSphere(light_shader);
       }
