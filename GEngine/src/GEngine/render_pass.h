@@ -6,9 +6,23 @@
 namespace GEngine {
 class CRenderPass {
 public:
+
+  enum class ERenderPassType {
+    Default,
+    Once,
+    // todo: implement other renderpass 
+    Delay,
+    ScreenQuad,
+    ShadowMap,
+    ZOnly,
+    Opaque,
+    Transparent,
+    UI,
+  };
+
   CRenderPass();
   CRenderPass(const std::string &name, int order);
-  CRenderPass(const std::string &name, int order, GEngine::ERenderPassType type);
+  CRenderPass(const std::string &name, int order, ERenderPassType type);
   virtual ~CRenderPass();
 
   // implemented by user
@@ -24,14 +38,14 @@ public:
   const int GetOrder() const { return pass_order_; }
   void SetOrder(int order) { pass_order_ = order; }
 
-  GEngine::ERenderPassType GetType() const { return pass_type_; }
-  void SetType(GEngine::ERenderPassType type) { pass_type_ = type; }
+  ERenderPassType GetType() const { return pass_type_; }
+  void SetType (ERenderPassType type) { pass_type_ = type; }
 
   std::shared_ptr<CShader> shader_;
 
 private:
   std::string pass_name_;
   int pass_order_ = -1;
-  GEngine::ERenderPassType pass_type_ = GEngine::ERenderPassType::Default;
+  ERenderPassType pass_type_ = ERenderPassType::Default;
 };
 } // namespace GEngine

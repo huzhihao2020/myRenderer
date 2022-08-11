@@ -74,7 +74,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
       if (render_passes[i]->GetOrder() == -1)
         continue;
       switch (render_passes[i]->GetType()) {
-      case GEngine::ERenderPassType::Once:
+      case GEngine::CRenderPass::ERenderPassType::Once:
         render_passes[i]->Tick();
         render_passes[i]->SetOrder(-1);
         break;

@@ -10,7 +10,7 @@ GEngine::CRenderPass::CRenderPass(const std::string &name, int order)
 }
 
 GEngine::CRenderPass::CRenderPass(const std::string &name, int order,
-                                  GEngine::ERenderPassType type)
+                                  ERenderPassType type)
     : pass_name_(name), pass_order_(order), pass_type_(type)
 {
 }
