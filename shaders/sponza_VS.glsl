@@ -3,11 +3,6 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoords;
 layout (location = 3) in vec3 aTangent;
-layout (location = 4) in vec3 aBitangent;
-
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
 
 out VS_OUT {
     vec3 FragPosViewspace;
@@ -21,6 +16,9 @@ out VS_OUT {
     }lights[3];
 }vs_out;
 
+uniform mat4 u_model;
+uniform mat4 u_view;
+uniform mat4 u_projection;
 
 void main()
 {

@@ -79,7 +79,6 @@ bool GEngine::CMesh::InitFromScene(const aiScene* scene, std::string &filename) 
       const auto& a_normal = ai_mesh->HasNormals() ? ai_mesh->mNormals[jj] : default_normal;
       const auto& a_texcoord = ai_mesh->HasTextureCoords(0) ? ai_mesh->mTextureCoords[0][jj] : zero3f;
       const auto& a_tangent = ai_mesh->HasTangentsAndBitangents() ? ai_mesh->mTangents[jj] : default_tangent;
-      const auto& a_bitangent = ai_mesh->HasTangentsAndBitangents() ? ai_mesh->mBitangents[jj] : default_bitangent;
 
       positions_.push_back(glm::vec3(a_pos.x, a_pos.y, a_pos.z));
       normals_.push_back(glm::vec3(a_normal.x, a_normal.y, a_normal.z));
@@ -160,7 +159,7 @@ bool GEngine::CMesh::ParseMaterials(const aiScene *scene, const std::string& fil
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE, materials_[i]->diffuse_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_HEIGHT, materials_[i]->normal_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_OPACITY, materials_[i]->alpha_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_BASE_COLOR, materials_[i]->basecolor_texture_);
+    // LoadMaterialTexture(p_material, filedir, i, aiTextureType_BASE_COLOR, materials_[i]->basecolor_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE_ROUGHNESS, materials_[i]->roughness_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_METALNESS, materials_[i]->metallic_texture_);
     LoadMaterialTexture(p_material, filedir, i, aiTextureType_AMBIENT_OCCLUSION, materials_[i]->ao_texture_);
@@ -206,7 +205,9 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
   for (int i = 0; i < meshes_.size(); i++) {
     auto material_index = meshes_[i].material_index_;
     // common
+    shader->SetBool("has_diffuse_texture", false);
     if (materials_[material_index]->diffuse_texture_ != nullptr) {
+      shader->SetBool("has_diffuse_texture", true);
       shader->SetTexture("texture_diffuse", materials_[material_index]->diffuse_texture_);
     }
     shader->SetBool("has_normal_texture", false);
@@ -221,13 +222,19 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
       shader->SetTexture("texture_alpha", materials_[material_index]->alpha_texture_);
     }
     // pbr
+    shader->SetBool("has_base_color_texture", false);
     if (materials_[material_index]->basecolor_texture_ != nullptr) {
+      shader->SetBool("has_base_color_texture", true);
       shader->SetTexture("texture_base_color", materials_[material_index]->basecolor_texture_);
     }
+    shader->SetBool("has_metallic_texture", false);
     if (materials_[material_index]->metallic_texture_ != nullptr) {
+      shader->SetBool("has_metallic_texture", true);
       shader->SetTexture("texture_metallic", materials_[material_index]->metallic_texture_);
     }
+    shader->SetBool("has_roughness_texture", false);
     if (materials_[material_index]->roughness_texture_ != nullptr) {
+      shader->SetBool("has_roughness_texture", true);
       shader->SetTexture("texture_roughness", materials_[material_index]->roughness_texture_);
     }
     if (materials_[material_index]->ao_texture_ != nullptr) {

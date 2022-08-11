@@ -43,8 +43,11 @@ GLvoid GEngine::CApp::RunMainLoop() {
                                                 std::string("../../shaders/light_sphere_FS.glsl"));
 
   bool render_light = false;
-  bool render_sponza = false;
-  bool render_pbr_sphere = true;
+
+  bool render_sponza_phong = false;
+  bool render_sponza_pbr = true;
+
+  bool render_pbr_sphere = false;
 
   // texture
   if(render_light) {
@@ -56,12 +59,16 @@ GLvoid GEngine::CApp::RunMainLoop() {
   // mesh
   // std::string model_path("../../assets/model/glTF/DamagedHelmet.gltf");
   // std::string model_path("../../assets/model/backpack/backpack.obj");
-  auto mesh_sponza = std::make_shared<GEngine::CMesh>();
-  if(render_sponza) {
-    std::string model_path("../../assets/model/sponza/Scale300Sponza.obj");
-    mesh_sponza->LoadMesh(model_path);
-  }
   // std::string model_path("../../assets/model/Lucy/Lucy.obj"); // Large model
+  auto mesh_sponza = std::make_shared<GEngine::CMesh>();
+  std::string sponza_model_path;
+  if(render_sponza_phong) {
+    // sponza_model_path = "../../assets/model/sponza/sponza.obj";
+    sponza_model_path = "../../assets/model/sponza/Scale300Sponza.obj";
+  } else if(render_sponza_pbr) {
+    sponza_model_path = "../../assets/model/SponzaPBR/SponzaPBR.obj";
+  }
+  mesh_sponza->LoadMesh(sponza_model_path);
 
   // render loop
   while (!glfwWindowShouldClose(window_)) {
@@ -95,29 +102,39 @@ GLvoid GEngine::CApp::RunMainLoop() {
       CSingleton<CRenderSystem>()->RenderSphere(basic_shader); // render sphere
     }   
     // render model
-    if(render_sponza) {
+    if (render_sponza_phong) {
       sponza_shader->Use();
       model = glm::mat4(1.0f);
-      // model = glm::translate(model, glm::vec3(2, 2, 2));
+      // model = glm::scale(model, glm::vec3(10.0, 10.0, 10.0)); 
       model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
       sponza_shader->SetMat4("u_model", model);
       sponza_shader->SetMat4("u_view", view);
       sponza_shader->SetMat4("u_projection", projection);
       mesh_sponza->Render(sponza_shader); // render model]
+    } else if (render_sponza_pbr) {
+      pbr_shader->Use();
+      model = glm::mat4(1.0f);
+      // model = glm::translate(model, glm::vec3(2, 2, 2));
+      model = glm::scale(model, glm::vec3(10.0, 10.0, 10.0));
+      pbr_shader->SetMat4("u_model", model);
+      pbr_shader->SetMat4("u_view", view);
+      pbr_shader->SetMat4("u_projection", projection);
+      pbr_shader->SetVec3("u_basecolor", glm::vec3(0.5, 0.0, 0.0));
+      pbr_shader->SetFloat("u_metallic", 0.0);
+      pbr_shader->SetFloat("u_roughness", 0.5);
+      pbr_shader->SetBool("u_linear_diffuse", false);
+      mesh_sponza->Render(pbr_shader);
     }
+
     if(render_pbr_sphere) {
       pbr_shader->Use();
-      pbr_shader->SetBool("has_normal_texture;", false);
-      pbr_shader->SetBool("has_base_color_texture;", false);
-      pbr_shader->SetBool("has_roughness_texture;", false);
-      pbr_shader->SetBool("has_metallic_texture;", false);
-      pbr_shader->SetBool("has_ao_texture;", false);
       pbr_shader->SetMat4("u_view", view);
       pbr_shader->SetMat4("u_projection", projection);
       int nrRows = 7;
       int nrColumns = 7;
       float spacing = 2.5;
       pbr_shader->SetVec3("u_basecolor", glm::vec3(0.5, 0.0, 0.0));
+      // pbr_shader->SetBool("u_linear_diffuse", false); // no need for constant diffuse
       for (int row = 0; row < nrRows; ++row) {
         pbr_shader->SetFloat("u_metallic", (float)row / (float)nrRows);
         for (int col = 0; col < nrColumns; ++col) {

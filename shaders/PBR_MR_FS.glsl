@@ -14,10 +14,11 @@ in VS_OUT {
     }lights[4];
 }fs_in;
 
+uniform sampler2D texture_diffuse;
+uniform bool has_diffuse_texture;
+uniform bool u_linear_diffuse;
 uniform sampler2D texture_normal;
 uniform bool has_normal_texture;
-uniform sampler2D texture_base_color;
-uniform bool has_base_color_texture;
 uniform sampler2D texture_roughness;
 uniform bool has_roughness_texture;
 uniform sampler2D texture_metallic;
@@ -25,6 +26,8 @@ uniform bool has_metallic_texture;
 uniform sampler2D texture_ao;
 uniform bool has_ao_texture;
 uniform sampler2D texture_emissive;
+uniform bool has_alpha_texture;
+uniform sampler2D texture_alpha;
 
 uniform float u_metallic;
 uniform float u_roughness;
@@ -136,16 +139,26 @@ vec3 CookTorranceBRDF(FragAttribute frag_attribute, vec3 viewdir, vec3 lightdir,
 
 void main()
 { 
-  // frag_attribute.normal = fs_in.Normal; 
-  frag_attribute.normal = normalize(fs_in.Normal); 
-  if(has_normal_texture) {
-      frag_attribute.normal = texture(texture_normal, fs_in.TexCoords).rgb;
-      frag_attribute.normal = frag_attribute.normal * 2.0 - vec3(1.0);
-      frag_attribute.normal = normalize(fs_in.TBN * frag_attribute.normal);
+  // alpha test
+  if(has_alpha_texture) {
+      float alpha = texture(texture_alpha, fs_in.TexCoords).r;
+      if(alpha<0.9) discard;
   }
+
+  frag_attribute.normal = normalize(fs_in.Normal); 
+  // if(has_normal_texture) {
+  //     frag_attribute.normal = texture(texture_normal, fs_in.TexCoords).rgb;
+  //     frag_attribute.normal = frag_attribute.normal * 2.0 - vec3(1.0);
+  //     frag_attribute.normal = normalize(fs_in.TBN * frag_attribute.normal);
+  // }
   frag_attribute.base_color = u_basecolor;
-  if(has_base_color_texture) {
-    frag_attribute.base_color = ToLinear(texture(texture_base_color, fs_in.TexCoords).rgb);
+  if(has_diffuse_texture) {
+    if(u_linear_diffuse) {
+      frag_attribute.base_color = texture(texture_diffuse, fs_in.TexCoords).rgb;
+    }
+    else {
+      frag_attribute.base_color = ToLinear(texture(texture_diffuse, fs_in.TexCoords).rgb);
+    }
   } 
   frag_attribute.ao = 0.0;
   if(has_ao_texture) {
@@ -169,8 +182,11 @@ void main()
   }
   vec3 ambient = vec3(0.03) * frag_attribute.base_color;
   Lo += ambient;
-  // Lo = ACESToneMapping(Lo, 1.0);
-  Lo = ReinhardToneMapping(Lo, 1.0);
+  Lo = ACESToneMapping(Lo, 1.0);
+  // Lo = ReinhardToneMapping(Lo, 1.0);
   Lo = ToSRGB(Lo);
+  // FragColor = vec4(fs_in.TexCoords, 0.0, 1.0);
+  // FragColor = vec4(vec3(frag_attribute.base_color), 1.0);
+  // FragColor = vec4(vec3(frag_attribute.normal), 1.0);
   FragColor = vec4(Lo, 1.0);
 }
