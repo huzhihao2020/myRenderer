@@ -22,6 +22,10 @@ The `.xcodeproj` file will be written to `build/`
 
 ![GEngine .glTF model image](GEngine-glTF-PBR.jpeg) 
 
+* glTF PBR Model-Debug  `(assets/model/sponza-gltf-pbr/sponza.gltf)`
+
+![GEngine .glTF model image](GEngine-glTF-PBR-debug.jpeg)
+
 ## Files
 
 * GEngine

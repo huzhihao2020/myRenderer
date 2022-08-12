@@ -14,6 +14,7 @@ public:
   void Tick();
 
   ImGuiIO *GetMainIO() const { return io_; }
+  int test_button_status_ = 0;
 
 private:
   ImVec4 clear_color_ = {0.2f, 0.3f, 0.4f, 1.0f}; // not used yet
@@ -21,5 +22,6 @@ private:
   bool show_window_ = true;
   ImGuiIO *io_ = nullptr;
   ImGuiStyle *style_;
+
 };
 } // namespace GEngine

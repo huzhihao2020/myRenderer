@@ -35,10 +35,12 @@ GLvoid GEngine::CApp::RunMainLoop() {
   glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
   auto basic_shader  = std::make_shared<CShader>(std::string("../../shaders/vert.glsl"),
                                                  std::string("../../shaders/frag.glsl"));
-  auto sponza_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_VS.glsl"), 
+  auto sponza_obj_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_VS.glsl"), 
                                                  std::string("../../shaders/sponza_FS.glsl"));
   auto sponza_pbr_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_PBR_VS.glsl"),
                                                      std::string("../../shaders/sponza_PBR_FS.glsl"));
+  auto sponza_pbr_shader_debug = std::make_shared<CShader>(std::string("../../shaders/sponza_PBR_VS_debug.glsl"),
+                                                           std::string("../../shaders/sponza_PBR_FS_debug.glsl"));
   auto pbr_shader = std::make_shared<CShader>(std::string("../../shaders/PBR_MR_VS.glsl"),
                                               std::string("../../shaders/PBR_MR_FS.glsl"));
   auto light_shader = std::make_shared<CShader>(std::string("../../shaders/light_sphere_VS.glsl"),
@@ -102,27 +104,34 @@ GLvoid GEngine::CApp::RunMainLoop() {
     }   
     // render model
     if (render_sponza_phong) {
-      sponza_shader->Use();
+      sponza_obj_shader->Use();
       model = glm::mat4(1.0f);
       // model = glm::scale(model, glm::vec3(10.0, 10.0, 10.0)); 
+      model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+      sponza_obj_shader->SetMat4("u_model", model);
+      sponza_obj_shader->SetMat4("u_view", view);
+      sponza_obj_shader->SetMat4("u_projection", projection);
+      mesh_sponza->Render(sponza_obj_shader); // render model]
+    } else if (render_sponza_pbr) {
+      auto sponza_shader = sponza_pbr_shader;
+
+      if(CSingleton<CRenderSystem>()->GetOrCreateMainUI()->test_button_status_) {
+        sponza_shader = sponza_pbr_shader_debug;
+      }
+      int window_size[2];
+      glfwGetWindowSize(window_, &window_size[0], &window_size[1]);
+      sponza_shader->Use();
+      model = glm::mat4(1.0f);
+      model = glm::translate(model, glm::vec3(0.0, -50.0, 0.0));
       model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
       sponza_shader->SetMat4("u_model", model);
       sponza_shader->SetMat4("u_view", view);
       sponza_shader->SetMat4("u_projection", projection);
-      mesh_sponza->Render(sponza_shader); // render model]
-    } else if (render_sponza_pbr) {
-      sponza_pbr_shader->Use();
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(0.0, -50.0, 0.0));
-      model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
-      sponza_pbr_shader->SetMat4("u_model", model);
-      sponza_pbr_shader->SetMat4("u_view", view);
-      sponza_pbr_shader->SetMat4("u_projection", projection);
-      sponza_pbr_shader->SetVec3("u_basecolor", glm::vec3(0.5, 0.0, 0.0));
-      sponza_pbr_shader->SetFloat("u_metallic", 0.5);
-      sponza_pbr_shader->SetFloat("u_roughness", 0.5);
-      sponza_pbr_shader->SetBool("u_normal_map_flip_green_channel", false);
-      mesh_sponza->Render(sponza_pbr_shader);
+      sponza_shader->SetVec3("u_basecolor", glm::vec3(0.5, 0.0, 0.0));
+      sponza_shader->SetFloat("u_metallic", 0.5);
+      sponza_shader->SetFloat("u_roughness", 0.5);
+      sponza_shader->SetVec2("u_viewport_size", glm::vec2(window_size[0], window_size[1]));
+      mesh_sponza->Render(sponza_shader);
     }
 
     if(render_pbr_sphere) {
