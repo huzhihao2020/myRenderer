@@ -4,21 +4,23 @@ A toy renderer
 
 ## Build for MACOS
 
-`sudo chmod 777 ./build-macos.sh`
-
 `sudo ./build-macos.sh`
 
 The `.xcodeproj` file will be written to `build/`
 
 ## Feature
 
-* Model Loading
+* obj Model (`assets/model/sponza/sponza.obj`)
 
 ![GEngine .obj model image](GEngine-OBJ.jpeg)
 
-* PBR 
+* PBR (metallic-roughness)
 
 ![GEngine .obj model image](GEngine-PBR.jpeg)
+
+* glTF PBR Model `(assets/model/sponza-gltf-pbr/sponza.gltf)`
+
+![GEngine .glTF model image](GEngine-glTF-PBR.jpeg) 
 
 ## Files
 
