@@ -9,4 +9,4 @@ int GEngine::WINDOW_CONFIG::VIEWPORT_HEIGHT = GEngine::WINDOW_CONFIG::WINDOW_HEI
 std::string GEngine::WINDOW_CONFIG::WINDOW_TITLE = "GEngine";
 
 // TRUE if on mac retina screen 
-bool GEngine::WINDOW_CONFIG::IS_MACOS_WINDOW = false;
+bool GEngine::WINDOW_CONFIG::IS_MACOS_WINDOW = true;
