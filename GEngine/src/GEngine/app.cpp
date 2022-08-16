@@ -76,11 +76,21 @@ GLvoid GEngine::CApp::RunMainLoop() {
 
   if (render_pbr_sphere) {
     auto ibl_irradiance_texture = CSingleton<CRenderSystem>()->texture_center_["irradiance_texture"];
+    auto ibl_prefiltered_texture = CSingleton<CRenderSystem>()->texture_center_["prefiltered_texture"];
+    auto ibl_brdf_lut = CSingleton<CRenderSystem>()->texture_center_["ibl_brdf_lut"];
     // auto ibl_irradiance_texture = CSingleton<CRenderSystem>()->texture_center_["skybox_texture"];
     if (!ibl_irradiance_texture) {
       GE_WARN("ibl_irradiance_texture not exists!");
     }
+    if (!ibl_prefiltered_texture) {
+      GE_WARN("ibl_prefiltered_texture not exists!");
+    }
+    if (!ibl_brdf_lut) {
+      GE_WARN("ibl_brdf_lut not exists!");
+    }
     pbr_shader->SetTexture("ibl_irradiance_cubemap", ibl_irradiance_texture);
+    pbr_shader->SetTexture("ibl_prefilter_map", ibl_prefiltered_texture);
+    pbr_shader->SetTexture("ibl_brdf_lut", ibl_brdf_lut);
   }
 
   // render loop

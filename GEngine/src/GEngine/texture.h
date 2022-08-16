@@ -111,6 +111,7 @@ public:
   std::vector<GLvoid*> datas_;
   EPixelFormat internal_format_ = EPixelFormat::kRGB; 
   EPixelFormat external_format_ = EPixelFormat::kRGB;
+  bool has_mipmap_ = false;
 
 private:
   ETarget target_;
@@ -125,6 +126,5 @@ private:
   EWrapMode t_wrap_mode_ = EWrapMode::kRepeat;
   EWrapMode r_wrap_mode_ = EWrapMode::kRepeat;
 
-  bool has_mipmap_ = false;
 };
 } // namespace GEngine

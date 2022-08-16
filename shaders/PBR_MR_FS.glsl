@@ -3,6 +3,7 @@ out vec4 FragColor;
 
 in VS_OUT {
     vec3 FragPosViewspace;
+    vec3 FragPosWorldspace;
     vec2 TexCoords;
     mat3 TBN;
     vec3 Normal;
@@ -16,6 +17,8 @@ in VS_OUT {
 }fs_in;
 
 uniform samplerCube ibl_irradiance_cubemap;
+uniform samplerCube ibl_prefilter_map;
+uniform sampler2D ibl_brdf_lut;
 uniform float u_metallic;
 uniform float u_roughness;
 uniform vec3 u_basecolor;
@@ -32,8 +35,8 @@ struct FragAttribute {
 }frag_attribute;
 
 struct EnvLight{
-  vec3 ks;
-}eng_light;
+  vec3 F0;
+}env_ibl;
 
 vec3 ToLinear(vec3 v) { return pow(v,     vec3(2.2)); }
 vec3 ToSRGB(vec3 v)   { return pow(v, vec3(1.0/2.2)); }
@@ -74,6 +77,11 @@ vec3 FresnelSchlick(float HdotV, vec3 F0) {
   return F0 + (vec3(1.0) - F0) * m2 * m2 * m;
 }
 
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}   
+
 // http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
 vec3 FresnelUEApprox(float HdotV, vec3 F0) {
   return F0 + (vec3(1.0)-F0) * exp2((((-5.55473*HdotV)-6.98316)*HdotV));
@@ -111,7 +119,7 @@ vec3 CookTorranceBRDF(FragAttribute frag_attribute, vec3 viewdir, vec3 lightdir,
   F0 = mix(F0, frag_attribute.base_color, frag_attribute.metalness);
   // vec3 F = FresnelUEApprox(HdotV, F0);
   vec3 F = FresnelSchlick(HdotV, F0);
-  eng_light.ks = FresnelSchlick(NdotV, F0);
+  env_ibl.F0 = F0;
   vec3 ks = F;
   vec3 kd = vec3(1.0) - ks;
 
@@ -145,6 +153,10 @@ void main()
   frag_attribute.ao = 1.0;
   vec4 ambient_irradiance = texture(ibl_irradiance_cubemap, fs_in.WorldNormal);
 
+  vec3 N = normalize(fs_in.WorldNormal);
+  vec3 V = normalize(-fs_in.FragPosViewspace);
+  vec3 R = reflect(-V, N); 
+
   vec3 Lo = vec3(0.0);
   for(int i=0; i<4; i++) {
     vec3 light_dir = normalize(fs_in.lights[i].position - fs_in.FragPosViewspace);
@@ -156,10 +168,21 @@ void main()
     Lo = vec3(0.0);
   }
   // irradiance color
-  vec3 kS = eng_light.ks;
+  vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), env_ibl.F0, frag_attribute.roughness);
+
+  vec3 kS = F;
   vec3 kD = vec3(1.0) - kS;
   kD *= (1.0 - frag_attribute.metalness);
-  Lo += kD * ambient_irradiance.rgb * frag_attribute.ao * frag_attribute.base_color;
+  vec3 ibl_diffuse = ambient_irradiance.rgb * frag_attribute.base_color;
+  // ibl specular
+  const float MAX_REFLECTION_LOD = 4.0;
+  vec3 prefilteredColor = textureLod(ibl_prefilter_map, R,  frag_attribute.roughness * MAX_REFLECTION_LOD).rgb;    
+  vec2 brdf  = texture(ibl_brdf_lut, vec2(max(dot(N, V), 0.0), frag_attribute.roughness)).rg;
+  vec3 ibl_specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+  vec3 ambient = (kD * ibl_diffuse + ibl_specular) * frag_attribute.ao;
+
+  Lo += ambient;
   // tone mapping
   Lo = ACESToneMapping(Lo, 1.0);
   // Lo = ReinhardToneMapping(Lo, 1.0);

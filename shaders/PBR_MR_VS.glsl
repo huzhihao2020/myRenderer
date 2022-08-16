@@ -6,6 +6,7 @@ layout (location = 3) in vec3 aTangent;
 
 out VS_OUT {
     vec3 FragPosViewspace;
+    vec3 FragPosWorldspace;
     vec2 TexCoords;
     mat3 TBN;
     vec3 Normal;
@@ -26,6 +27,7 @@ void main()
 {
     mat4 view_model_transform = u_view * u_model;
     vs_out.FragPosViewspace = (view_model_transform * vec4(aPos, 1.0)).xyz;
+    vs_out.FragPosWorldspace = (u_model * vec4(aPos, 1.0)).xyz;
 
     vec3 N = normalize(mat3(transpose(inverse(view_model_transform))) * aNormal);
     vs_out.Normal = N;
