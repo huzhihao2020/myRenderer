@@ -176,17 +176,21 @@ void main()
   vec3 ibl_diffuse = ambient_irradiance.rgb * frag_attribute.base_color;
   // ibl specular
   const float MAX_REFLECTION_LOD = 4.0;
-  vec3 prefilteredColor = textureLod(ibl_prefilter_map, R,  frag_attribute.roughness * MAX_REFLECTION_LOD).rgb;    
-  vec2 brdf  = texture(ibl_brdf_lut, vec2(max(dot(N, V), 0.0), frag_attribute.roughness)).rg;
-  vec3 ibl_specular = prefilteredColor * (F * brdf.x + brdf.y);
+  vec4 prefilteredColor = textureLod(ibl_prefilter_map, R, frag_attribute.roughness * MAX_REFLECTION_LOD);    
+  // vec4 brdf  = texture(ibl_brdf_lut, fs_in.TexCoords);
+  // vec4 brdf  = texture(ibl_brdf_lut, vec2(max(dot(N, V), 0.0), frag_attribute.roughness));
+  // vec3 ibl_specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-  vec3 ambient = (kD * ibl_diffuse + ibl_specular) * frag_attribute.ao;
+  // vec3 ambient = (kD * ibl_diffuse + ibl_specular) * frag_attribute.ao;
 
-  Lo += ambient;
+  // Lo += ambient;
   // tone mapping
   Lo = ACESToneMapping(Lo, 1.0);
   // Lo = ReinhardToneMapping(Lo, 1.0);
 
   Lo = ToSRGB(Lo);
-  FragColor = vec4(Lo, 1.0);
+  // FragColor = vec4(brdf.r, brdf.g, 0.0, 1.0);
+  // FragColor = vec4(frag_attribute.roughness, frag_attribute.metalness, 0.0, 1.0);
+  // FragColor = vec4(Lo, 1.0);
+  FragColor = prefilteredColor;
 }

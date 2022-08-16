@@ -31,7 +31,7 @@ void main()
 
     vec3 N = normalize(mat3(transpose(inverse(view_model_transform))) * aNormal);
     vs_out.Normal = N;
-    vs_out.WorldNormal = mat3(u_model) * aNormal;
+    vs_out.WorldNormal = normalize(mat3(transpose(inverse(u_model))) * aNormal);
     vec3 T = normalize((mat3(view_model_transform) * aTangent).xyz);
     vec3 B = normalize(cross(N, T));
     // TBN * tangent_pace_normal = view_space_normal

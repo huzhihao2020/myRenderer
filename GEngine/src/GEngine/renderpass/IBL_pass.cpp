@@ -17,19 +17,26 @@ void GEngine::CIBLPass::Init() {
   
   framebuffer_ = std::make_shared<CFrameBuffer>();
   irradiance_texture_ = std::make_shared<CTexture>(CTexture::ETarget::kTextureCubeMap);
+  irradiance_texture_->SetSWrapMode(CTexture::EWrapMode::kClampToEdge),
+  irradiance_texture_->SetTWrapMode(CTexture::EWrapMode::kClampToEdge),
+  irradiance_texture_->SetRWrapMode(CTexture::EWrapMode::kClampToEdge),
+  irradiance_texture_->SetMinFilter(CTexture::EMinFilter::kLinear);
+  irradiance_texture_->SetMagFilter(CTexture::EMagFilter::kLinear);
   irradiance_texture_->SetWidth(32);
   irradiance_texture_->SetHeight(32);
   glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_texture_->id_);
   for(unsigned int i=0; i<6; i++) {
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB,
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
                  irradiance_texture_->GetWidth(), irradiance_texture_->GetHeight(), 
-                 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+                 0, GL_RGB, GL_FLOAT, nullptr);
   }
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, static_cast<GLuint>(irradiance_texture_->GetSWrapMode()));
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, static_cast<GLuint>(irradiance_texture_->GetTWrapMode()));
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, static_cast<GLuint>(irradiance_texture_->GetRWrapMode()));
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, static_cast<GLuint>(irradiance_texture_->GetMinFilter())); 
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, static_cast<GLuint>(irradiance_texture_->GetMagFilter()));
+
+  glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
   framebuffer_->SetColorAttachment(CAttachment(irradiance_texture_));
   auto renderbuffer = std::make_shared<CRenderBuffer>();
@@ -58,7 +65,11 @@ void GEngine::CIBLPass::Init() {
 
   // Load brdf_lut
   std::string lut_path = std::string("../../assets/textures/IBL/ibl_brdf_lut.png");
-  specular_brdf_lut_ = std::make_shared<CTexture>(lut_path);
+  auto sampler = std::make_shared<CSampler>(
+      CSampler::EMinFilter::kLinear, CSampler::EMagFilter::kLinear,
+      CSampler::EWrapMode::kClampToEdge, CSampler::EWrapMode::kClampToEdge);
+  specular_brdf_lut_ =
+      std::make_shared<CTexture>(lut_path, CTexture::ETarget::kTexture2D, true, sampler);
   CSingleton<CRenderSystem>()->texture_center_["ibl_brdf_lut"] = specular_brdf_lut_;
 }
 
@@ -101,6 +112,7 @@ void GEngine::CIBLPass::GenerateIrradianceMap(std::shared_ptr<GEngine::CTexture>
 }
 
 void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture> skybox_texture, int max_mip_levels) {
+  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
   // Init Prefiltered Cubemap & framebuffer
   prefiltered_texture_ = std::make_shared<CTexture>(CTexture::ETarget::kTextureCubeMap);
   prefiltered_texture_->SetSWrapMode(CTexture::EWrapMode::kClampToEdge),
@@ -112,10 +124,11 @@ void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture
   prefiltered_texture_->SetHeight(128);
   prefiltered_texture_->has_mipmap_ = true;
   glBindTexture(GL_TEXTURE_CUBE_MAP, prefiltered_texture_->id_);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 5);
   for(unsigned int i=0; i<6; i++) {
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB,
-                 irradiance_texture_->GetWidth(), irradiance_texture_->GetHeight(), 
-                 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0,
+                 GL_RGB, GL_FLOAT, nullptr);
   }
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, static_cast<GLuint>(prefiltered_texture_->GetSWrapMode()));
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, static_cast<GLuint>(prefiltered_texture_->GetTWrapMode()));
@@ -124,11 +137,12 @@ void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, static_cast<GLuint>(prefiltered_texture_->GetMagFilter()));
   // reserve space for lod
   glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
   framebuffer_->SetColorAttachment(CAttachment(prefiltered_texture_));
   auto renderbuffer = std::make_shared<CRenderBuffer>();
-  renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, 128, 128);
-  framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
+  // renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, 128, 128);
+  // framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
 
   // render to cubemap texture
   std::string v_path("../../GEngine/src/GEngine/renderpass/ibl_irradiance_vert.glsl");
@@ -144,26 +158,28 @@ void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture
     glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
     glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
   };
+  
+  shader_->Use();
   shader_->SetTexture("cubemap_texture", skybox_texture);
   shader_->SetMat4("projection", capture_projection);
-  shader_->Use();
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    GE_WARN("Framebuffer object is not complete");
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_->GetID());
 
-  for(int level=0; level<max_mip_levels; level++) {
+  // glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_->GetID());
+
+  for(unsigned int level=0; level<max_mip_levels; level++) {
     unsigned int width = static_cast<unsigned int>(128 * std::pow(0.5, level));
     unsigned int height = static_cast<unsigned int>(128 * std::pow(0.5, level));
+    framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
     renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, width, height);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      GE_WARN("Framebuffer object is not complete");
+    }
     glViewport(0, 0, width, height);
 
     float roughness = (float)level / (float)(max_mip_levels - 1);
     shader_->SetFloat("roughness", roughness);
-    for(int i=0; i<6; i++) {
+    for(unsigned int i=0; i<6; i++) {
       shader_->SetMat4("view", capture_views[i]);
       glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefiltered_texture_->id_, level);
-
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       CSingleton<GEngine::CRenderSystem>()->RenderCube();
     }
