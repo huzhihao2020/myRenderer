@@ -1,12 +1,13 @@
-#include "skybox_pass.h"
-#include "log.h"
-#include "render_pass.h"
-#include "render_system.h"
-#include "shader.h"
-#include "stb/stb_image.h"
-#include "texture.h"
+#include "GEngine/renderpass/skybox_pass.h"
+#include "GEngine/log.h"
+#include "GEngine/render_pass.h"
+#include "GEngine/shader.h"
+#include "GEngine/singleton.h"
+#include "GEngine/texture.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <memory>
+#include <stb/stb_image.h>
 #include <vector>
 
 GEngine::CSkyboxPass::CSkyboxPass(const std::string &name, int order)
@@ -27,33 +28,35 @@ void GEngine::CSkyboxPass::Init() {
   std::string f_path("../../GEngine/src/GEngine/renderpass/skybox_shader_frag.glsl");
   shader_ = std::make_shared<GEngine::CShader>(v_path, f_path);
 
-  skybox_texture_ = std::make_shared<GEngine::CTexture>(GEngine::CTexture::ETarget::kTextureCubeMap);
-  skybox_texture_->SetMinFilter(GEngine::CTexture::EMinFilter::kLinear);
-  skybox_texture_->SetMagFilter(GEngine::CTexture::EMagFilter::kLinear);
-  skybox_texture_->SetSWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
-  skybox_texture_->SetTWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
-  skybox_texture_->SetRWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
-  LoadCubemapFromFiles(faces, skybox_texture_);
+  auto skybox_texture = std::make_shared<GEngine::CTexture>(GEngine::CTexture::ETarget::kTextureCubeMap);
+  skybox_texture->SetMinFilter(GEngine::CTexture::EMinFilter::kLinear);
+  skybox_texture->SetMagFilter(GEngine::CTexture::EMagFilter::kLinear);
+  skybox_texture->SetSWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
+  skybox_texture->SetTWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
+  skybox_texture->SetRWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
+  LoadCubemapFromFiles(faces, skybox_texture);
   shader_->Use();
-  shader_->SetTexture("cubemap_texture", skybox_texture_);
+  shader_->SetTexture("cubemap_texture", skybox_texture);
+  // CSingleton<CRenderSystem>()->RegisterAnyDataWithName("skybox_cubemap", skybox_texture);
+  CSingleton<CRenderSystem>()->texture_center_["skybox_texture"] = skybox_texture;
 }
 
 void GEngine::CSkyboxPass::Tick() {
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glClearColor(0.2, 0.3, 0.4, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
-  // todo
-  shader_->Use();
-  glm::mat4 view = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetViewMatrix();
-  glm::mat4 projection = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetProjectionMatrix();
-  view = glm::mat4(glm::mat3(view));
-  shader_->SetMat4("view", view);
-  shader_->SetMat4("projection", projection);
-  CSingleton<CRenderSystem>()->RenderCube();
-  glDepthFunc(GL_LESS); 
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+   glClearColor(0.2, 0.3, 0.4, 1.0);
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glEnable(GL_DEPTH_TEST);
+   glDepthFunc(GL_LEQUAL);
+   // todo
+   shader_->Use();
+   glm::mat4 view = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetViewMatrix();
+   glm::mat4 projection = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetProjectionMatrix();
+   view = glm::mat4(glm::mat3(view));
+   shader_->SetMat4("view", view);
+   shader_->SetMat4("projection", projection);
+   CSingleton<CRenderSystem>()->RenderCube();
+   glDepthFunc(GL_LESS); 
+   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void GEngine::CSkyboxPass::LoadCubemapFromFiles(const std::vector<std::string>& paths, std::shared_ptr<GEngine::CTexture> texture) {

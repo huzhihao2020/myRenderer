@@ -1,6 +1,6 @@
 #pragma once
 #include "GEngine/render_pass.h"
-#include "GEngine/texture.h"
+#include "GEngine/render_system.h"
 #include <string>
 
 namespace GEngine {
@@ -14,6 +14,6 @@ public:
   virtual void Init() override;
   virtual void Tick() override;
 private:
-  std::shared_ptr<GEngine::CTexture> skybox_texture_;
+  // std::shared_ptr<GEngine::CTexture> skybox_texture_;
 };
 } // namespace GEngine

@@ -12,19 +12,23 @@ The `.xcodeproj` file will be written to `build/`
 
 * obj Model (`assets/model/sponza/sponza.obj`)
 
-![GEngine .obj model image](GEngine-OBJ.jpeg)
+![GEngine .obj model image](images/GEngine-OBJ.jpeg)
 
 * PBR (metallic-roughness)
 
-![GEngine .obj model image](GEngine-PBR.jpeg)
+![GEngine .obj model image](images/GEngine-PBR.jpeg)
 
 * glTF PBR Model `(assets/model/sponza-gltf-pbr/sponza.gltf)`
 
-![GEngine .glTF model image](GEngine-glTF-PBR.jpeg) 
+![GEngine .glTF model image](images/GEngine-glTF-PBR.jpeg) 
 
 * glTF PBR Model-Debug  `(assets/model/sponza-gltf-pbr/sponza.gltf)`
 
-![GEngine .glTF model image](GEngine-glTF-PBR-debug.jpeg)
+![GEngine .glTF model image](images/GEngine-glTF-PBR-debug.jpeg)
+
+* IBL - Irradiance
+
+![GEngine .glTF model image](images/GEngine-IBL-irradiance.jpeg)
 
 ## Files
 

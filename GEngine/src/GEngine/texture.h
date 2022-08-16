@@ -63,6 +63,13 @@ public:
     kTexture2D      = GL_TEXTURE_2D,
     kTexture3D      = GL_TEXTURE_3D,
     kTextureCubeMap = GL_TEXTURE_CUBE_MAP,
+    // cubemap faces
+    kTextureCubeMapPositiveX = GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+    kTextureCubeMapNegativeX = GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+    kTextureCubeMapPositiveY = GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+    kTextureCubeMapNegativeY = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+    kTextureCubeMapPositiveZ = GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+    kTextureCubeMapNegativeZ = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
   };
 
   enum class EPixelFormat : GLenum {
@@ -71,26 +78,12 @@ public:
     kRGBA = GL_RGBA,
   };
 
-  enum class EWrapMode : GLenum {
-    kClampToEdge  = GL_CLAMP_TO_EDGE,
-    kMirrorRepeat = GL_MIRRORED_REPEAT,
-    kRepeat       = GL_REPEAT,
-  };
-  enum class EMagFilter : GLenum {
-    kNearest = GL_NEAREST,
-    kLinear  = GL_LINEAR,
-  };
-  enum class EMinFilter : GLenum {
-    kNearest = GL_NEAREST,
-    kLinear  = GL_LINEAR,
-    kNearestMipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
-    kNearestMipmapLinear   = GL_NEAREST_MIPMAP_LINEAR,
-    kLinearMipmapNearest  = GL_LINEAR_MIPMAP_NEAREST,
-    kLinearMipmapLinear   = GL_LINEAR_MIPMAP_LINEAR,
-  };
+  using EWrapMode  = CSampler::EWrapMode;
+  using EMagFilter = CSampler::EMagFilter;
+  using EMinFilter = CSampler::EMinFilter;
 
   CTexture(ETarget target);
-  CTexture(std::string& path, ETarget target = ETarget::kTexture2D, bool need_flip = false);
+  CTexture(std::string& path, ETarget target = ETarget::kTexture2D, bool need_flip = false, std::shared_ptr<CSampler> sampler = nullptr);
   CTexture(ETarget target, unsigned int id, int height, int width);
   ~CTexture();
 

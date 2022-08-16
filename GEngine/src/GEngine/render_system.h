@@ -7,6 +7,7 @@
 #include "GEngine/shader.h"
 #include "GEngine/singleton.h"
 #include <initializer_list>
+#include <any>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -31,23 +32,24 @@ public:
   std::shared_ptr<CCamera>      GetOrCreateMainCamera();
   std::shared_ptr<CEditorUI>    GetOrCreateMainUI();
   // std::shared_ptr<CModel>&      GetOrCreateModelByPath(const std::string& path);
+  std::any& GetAnyDataByName(const std::string& name);
   std::vector<std::shared_ptr<GEngine::CRenderPass>>& GetRenderPass() { return render_passes_; }
   void SetRenderPipelineType(ERenderPipelineType type);
 
   void RenderCube();
-  void RenderCube(std::shared_ptr<CShader> shader);
-  void RenderSphere(std::shared_ptr<CShader> shader);
+  void RenderSphere();
   
   int GetOrCreateCubeVAO();
   int CreateVAO(const GLvoid *vertex_data, int data_size,
                 std::initializer_list<int> attribute_layout,
                 const int indices[] = nullptr, int indices_size = 0,
                 int *VBO = nullptr);
-  // void CreateSphereWithRadius(float r);
-  // void CreateRectWithSize(glm::vec2 size);
 
   unsigned int LoadTexture(const std::string &path);
-  void RegisterRenderPass(const std::shared_ptr<GEngine::CRenderPass>& render_pass);
+  void RegisterRenderPass(const std::shared_ptr<CRenderPass>& render_pass);
+  void RegisterAnyDataWithName(const std::string& name, std::any data);
+
+  std::map<std::string, std::shared_ptr<CTexture>>  texture_center_;
 
 private:
   unsigned int cube_VAO_ = 0;
@@ -57,8 +59,8 @@ private:
   std::shared_ptr<CCamera>      main_camera_; // main camera
   std::shared_ptr<CEditorUI>    main_UI_;     // main UI
 
-  std::vector<std::shared_ptr<GEngine::CRenderPass>>  render_passes_;
+  std::vector<std::shared_ptr<CRenderPass>>  render_passes_;
   ERenderPipelineType render_pipeline_type_ = ERenderPipelineType::kForward;
-
+  std::map<std::string, std::any> resource_center_;
 };
 } // namespace GEngine

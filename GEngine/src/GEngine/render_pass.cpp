@@ -1,4 +1,5 @@
-#include "render_pass.h"
+#include "GEngine/render_pass.h"
+#include "GEngine/texture.h"
 
 GEngine::CRenderPass::CRenderPass()
 {
@@ -25,4 +26,12 @@ bool GEngine::CRenderPass::operator<(const CRenderPass &ohter) const {
 
 bool GEngine::CRenderPass::operator>(const CRenderPass &ohter) const {
   return pass_order_ > ohter.GetOrder();
+}
+
+GEngine::RenderPassDesc::RenderPassDesc() {}
+
+GEngine::RenderPassDesc::~RenderPassDesc() {}
+
+void GEngine::RenderPassDesc::Init() { 
+  glGenFramebuffers(1, &fbo_); 
 }

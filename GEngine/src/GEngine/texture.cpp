@@ -25,10 +25,17 @@ GEngine::CTexture::CTexture(ETarget target) : target_(target), owner_(true) {
   glGenTextures(1, &id_);
 }
 
-GEngine::CTexture::CTexture(std::string &path, ETarget target, bool need_flip) {
+GEngine::CTexture::CTexture(std::string &path, ETarget target, bool need_flip, std::shared_ptr<CSampler> sampler) {
   target_ = target;
   owner_ = true;
   stbi_set_flip_vertically_on_load(need_flip);
+  if(sampler) {
+    SetSWrapMode(sampler->GetSWrapMode());
+    SetRWrapMode(sampler->GetRWrapMode());
+    SetTWrapMode(sampler->GetTWrapMode());
+    SetMinFilter(sampler->GetMinFilter());
+    SetMagFilter(sampler->GetMagFilter());
+  }
   switch (target) {
   case ETarget::kTexture2D: {
     glGenTextures(1, &id_);

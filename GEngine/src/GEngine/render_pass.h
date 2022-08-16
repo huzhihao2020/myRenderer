@@ -1,6 +1,8 @@
 #pragma once
-#include "common.h"
-#include "shader.h"
+#include "GEngine/common.h"
+#include "GEngine/shader.h"
+#include "GEngine/texture.h"
+#include "GEngine/framebuffer.h"
 #include <string>
 
 namespace GEngine {
@@ -48,4 +50,19 @@ private:
   int pass_order_ = -1;
   ERenderPassType pass_type_ = ERenderPassType::Default;
 };
+
+class RenderPassDesc {
+  public:
+  RenderPassDesc();
+  ~RenderPassDesc();
+
+  void Init();
+
+  private:
+  unsigned int fbo_;
+  std::shared_ptr<CFrameBuffer> framebuffer_;
+  std::shared_ptr<CTexture> color_attachment_;
+  std::shared_ptr<CTexture> depth_attachment_;
+};
+
 } // namespace GEngine

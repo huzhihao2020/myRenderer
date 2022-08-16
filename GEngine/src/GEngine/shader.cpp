@@ -150,7 +150,7 @@ void GEngine::CShader::SetTexture(const std::string &name, const std::shared_ptr
     int binding_index = bound_textures_num_;
     glActiveTexture(GL_TEXTURE0 + binding_index);
     glUniform1i(glGetUniformLocation(shader_program_ID_, name.c_str()), binding_index);
-    glBindTexture(static_cast<GLuint>(texture->GetTarget()), texture->id_);
+    glBindTexture(static_cast<GLenum>(texture->GetTarget()), texture->id_);
     bound_textures_[name] = std::make_tuple(binding_index, texture);
     bound_textures_num_++;
   }
@@ -186,6 +186,6 @@ void GEngine::CShader::ActiveBoundTextures() const {
   for (const auto item : bound_textures_) {
     glActiveTexture(GL_TEXTURE0 + std::get<0>(item.second));
     const auto &texture = std::get<1>(item.second);
-    glBindTexture(static_cast<GLuint>(texture->GetTarget()), texture->id_);
+    glBindTexture(static_cast<GLenum>(texture->GetTarget()), texture->id_);
   }
 }

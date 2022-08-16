@@ -9,6 +9,7 @@ out VS_OUT {
     vec2 TexCoords;
     mat3 TBN;
     vec3 Normal;
+    vec3 WorldNormal;
     struct PointLight {
         vec3 position;
         vec3 color;
@@ -28,6 +29,7 @@ void main()
 
     vec3 N = normalize(mat3(transpose(inverse(view_model_transform))) * aNormal);
     vs_out.Normal = N;
+    vs_out.WorldNormal = mat3(u_model) * aNormal;
     vec3 T = normalize((mat3(view_model_transform) * aTangent).xyz);
     vec3 B = normalize(cross(N, T));
     // TBN * tangent_pace_normal = view_space_normal
@@ -43,7 +45,7 @@ void main()
     vs_out.lights[3].position = vec3( x, -x, 10.0);
     for(int i=0; i<4; i++) {
         vs_out.lights[i].color = vec3(0.7);
-        vs_out.lights[i].intensity = 300.0;
+        vs_out.lights[i].intensity = 150.0;
         float radius = 35.0;
         float radius2 = radius * radius;
         vs_out.lights[i].position = (u_view * vec4(vs_out.lights[i].position, 1.0)).xyz;

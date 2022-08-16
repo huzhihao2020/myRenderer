@@ -9,6 +9,7 @@
 #include "GEngine/model.h"
 #include "GEngine/mesh.h"
 #include "GEngine/texture.h"
+#include "singleton.h"
 
 GEngine::CApp::CApp()
 {
@@ -35,23 +36,21 @@ GLvoid GEngine::CApp::RunMainLoop() {
   glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
   auto basic_shader  = std::make_shared<CShader>(std::string("../../shaders/vert.glsl"),
                                                  std::string("../../shaders/frag.glsl"));
+  auto pbr_shader = std::make_shared<CShader>(std::string("../../shaders/PBR_MR_VS.glsl"),
+                                              std::string("../../shaders/PBR_MR_FS.glsl"));
   auto sponza_obj_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_VS.glsl"), 
                                                  std::string("../../shaders/sponza_FS.glsl"));
   auto sponza_pbr_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_PBR_VS.glsl"),
                                                      std::string("../../shaders/sponza_PBR_FS.glsl"));
   auto sponza_pbr_shader_debug = std::make_shared<CShader>(std::string("../../shaders/sponza_PBR_VS_debug.glsl"),
                                                            std::string("../../shaders/sponza_PBR_FS_debug.glsl"));
-  auto pbr_shader = std::make_shared<CShader>(std::string("../../shaders/PBR_MR_VS.glsl"),
-                                              std::string("../../shaders/PBR_MR_FS.glsl"));
   auto light_shader = std::make_shared<CShader>(std::string("../../shaders/light_sphere_VS.glsl"),
                                                 std::string("../../shaders/light_sphere_FS.glsl"));
 
-  bool render_light = false;
-
-  bool render_sponza_phong = false;
-  bool render_sponza_pbr = true;
-
-  bool render_pbr_sphere = false;
+  bool render_light        = 0;
+  bool render_sponza_phong = 0;
+  bool render_sponza_pbr   = 0;
+  bool render_pbr_sphere   = 1;
 
   // texture
   if(render_light) {
@@ -69,6 +68,19 @@ GLvoid GEngine::CApp::RunMainLoop() {
     mesh_sponza->LoadMesh(std::string("../../assets/model/sponza/Scale300Sponza.obj"));
   } else if(render_sponza_pbr) {
     mesh_sponza->LoadMesh(std::string("../../assets/model/sponza-gltf-pbr/sponza.glb"));
+  }
+
+  // sphere_pbr_ibl
+  // auto ibl_irradiance_data = CSingleton<CRenderSystem>()->GetAnyDataByName("irradiance_cubemap");
+  // auto ibl_irradiance_texture = std::any_cast<std::shared_ptr<CTexture>>(ibl_irradiance_data);
+
+  if (render_pbr_sphere) {
+    auto ibl_irradiance_texture = CSingleton<CRenderSystem>()->texture_center_["irradiance_texture"];
+    // auto ibl_irradiance_texture = CSingleton<CRenderSystem>()->texture_center_["skybox_texture"];
+    if (!ibl_irradiance_texture) {
+      GE_WARN("ibl_irradiance_texture not exists!");
+    }
+    pbr_shader->SetTexture("ibl_irradiance_cubemap", ibl_irradiance_texture);
   }
 
   // render loop
@@ -99,8 +111,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
     if(render_light) {
       basic_shader->Use();
       basic_shader->SetMat4("projection_view_model", projection_view_model);
-      // CSingleton<CRenderSystem>()->RenderCube(basic_shader); // render cube
-      CSingleton<CRenderSystem>()->RenderSphere(basic_shader); // render sphere
+      CSingleton<CRenderSystem>()->RenderSphere(); // render sphere
     }   
     // render model
     if (render_sponza_phong) {
@@ -142,7 +153,6 @@ GLvoid GEngine::CApp::RunMainLoop() {
       int nrColumns = 7;
       float spacing = 2.5;
       pbr_shader->SetVec3("u_basecolor", glm::vec3(0.5, 0.0, 0.0));
-      pbr_shader->SetBool("u_normal_map_flip_green_channel", false);
       for (int row = 0; row < nrRows; ++row) {
         pbr_shader->SetFloat("u_metallic", (float)row / (float)nrRows);
         for (int col = 0; col < nrColumns; ++col) {
@@ -150,7 +160,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
           model = glm::mat4(1.0f);
           model = glm::translate(model, glm::vec3((float)(col - (nrColumns / 2)) * spacing, (float)(row - (nrRows / 2)) * spacing, 0.0f));
           pbr_shader->SetMat4("u_model", model);
-          CSingleton<CRenderSystem>()->RenderSphere(pbr_shader);
+          CSingleton<CRenderSystem>()->RenderSphere();
         }
       }
       float x = 7.5f;
@@ -168,7 +178,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
           model = glm::translate(model, lights_pos[i]);
           model = glm::scale(model, glm::vec3(0.5f));
           light_shader->SetMat4("u_model", model);
-          CSingleton<CRenderSystem>()->RenderSphere(light_shader);
+          CSingleton<CRenderSystem>()->RenderSphere();
       }
     }
 

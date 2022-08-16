@@ -1,4 +1,5 @@
 #include "GEngine/render_system.h"
+#include "log.h"
 #include <algorithm>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -47,6 +48,14 @@ GEngine::CRenderSystem::GetOrCreateMainUI() {
     main_UI_ = std::make_shared<GEngine::CEditorUI>();
   }
   return main_UI_;
+}
+
+std::any& GEngine::CRenderSystem::GetAnyDataByName(const std::string& name) {
+  if(resource_center_.find(name) == resource_center_.end()) {
+    GE_ERROR("'{0}' not exists in resource center.", name);
+    // fixme
+  }
+  return resource_center_[name];
 }
 
 // std::shared_ptr<GEngine::CModel> &
@@ -153,91 +162,7 @@ int GEngine::CRenderSystem::CreateVAO(const GLvoid *vertex_data, int data_size,
   return VAO;
 }
 
-void GEngine::CRenderSystem::RenderCube(std::shared_ptr<CShader> shader) {
-  shader->Use();
-  glm::mat4 model = glm::mat4(1.0f);
-  glm::mat4 view = GetOrCreateMainCamera()->GetViewMatrix();
-  glm::mat4 projection = GetOrCreateMainCamera()->GetProjectionMatrix();
-  glm::mat4 projection_view_model = projection * view * model;
-  shader->SetMat4("projection_view_model", projection_view_model);
-  if(cube_VAO_ != 0) {
-    // cube already exists
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 1);
-    glBindVertexArray(cube_VAO_);
-    glEnable(GL_DEPTH_TEST);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-    return;
-  }
-  float cube_vertices[] = {
-    // positions          // normal            // uv
-    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-      1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-      1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-      1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-    -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
-      1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, 0.0f,
-      1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-      1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  1.0f, 1.0f,
-    -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,  0.0f, 0.0f,
-
-    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-    -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-    -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-    1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-    1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-    1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-    1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-      1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-      1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-      1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-    -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-    -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-      1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-      1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-      1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-    -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-    -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f};
-
-  // setup VAO & VBO
-     unsigned int cube_VBO;
-     glGenVertexArrays(1, &cube_VAO_);
-     glBindVertexArray(cube_VAO_);
-     glGenBuffers(1, &cube_VBO);
-     glBindBuffer(GL_ARRAY_BUFFER, cube_VBO);
-     glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
-
-     glEnableVertexAttribArray(0); // pos
-     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void *)0);
-     glEnableVertexAttribArray(1); // normal
-     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void *)(3 * sizeof(GL_FLOAT)));
-     glEnableVertexAttribArray(2); // uv
-     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GL_FLOAT), (void *)(6 * sizeof(GL_FLOAT)));
-
-     glBindVertexArray(cube_VAO_);
-     glEnable(GL_DEPTH_TEST);
-     glDrawArrays(GL_TRIANGLES, 0, 36);
-     // reset
-     glBindVertexArray(0);
-     glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void GEngine::CRenderSystem::RenderSphere(std::shared_ptr<CShader> shader) {
+void GEngine::CRenderSystem::RenderSphere() {
   if (sphere_VAO_ == 0) {
     glGenVertexArrays(1, &sphere_VAO_);
 
@@ -246,8 +171,8 @@ void GEngine::CRenderSystem::RenderSphere(std::shared_ptr<CShader> shader) {
     glGenBuffers(1, &ebo);
 
     std::vector<glm::vec3> positions;
-    std::vector<glm::vec2> uv;
     std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> uv;
     std::vector<glm::vec3> tangents;
     std::vector<unsigned int> indices;
 
@@ -265,8 +190,8 @@ void GEngine::CRenderSystem::RenderSphere(std::shared_ptr<CShader> shader) {
         float zPos = std::sin(phi) * std::sin(theta);
 
         positions.push_back(glm::vec3(xPos, yPos, zPos));
-        uv.push_back(glm::vec2(xSegment, ySegment));
         normals.push_back(glm::vec3(xPos, yPos, zPos));
+        uv.push_back(glm::vec2(xSegment, ySegment));
         tangents.push_back(glm::vec3(zPos, 0, -xPos));
       }
     }
@@ -315,14 +240,14 @@ void GEngine::CRenderSystem::RenderSphere(std::shared_ptr<CShader> shader) {
     glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
-    unsigned int stride = (3 + 2 + 3 + 3) * sizeof(float);
+    unsigned int stride = (3 + 3 + 2 + 3) * sizeof(float);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void *)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void *)(8 * sizeof(float)));
   }
 
@@ -392,4 +317,17 @@ void GEngine::CRenderSystem::RegisterRenderPass(
   //           render_pass1 < render_pass2
   //         }),
   //     render_pass);
+}
+
+void GEngine::CRenderSystem::RegisterAnyDataWithName(const std::string& name, std::any data) {
+  if(!data.has_value()) {
+    GE_ERROR("Failed to register data {0}.", name);
+    return;
+  }
+  if(resource_center_.find(name)!=resource_center_.end()) {
+    GE_WARN("Registering data {0} already exist in resource center", name);
+  }
+
+  GE_INFO("Register data '{0}' to resource center", name);
+  resource_center_[name] = data;
 }

@@ -6,6 +6,7 @@ in VS_OUT {
     vec2 TexCoords;
     mat3 TBN;
     vec3 Normal;
+    vec3 WorldNormal;
     struct PointLight {
         vec3 position;
         vec3 color;
@@ -14,28 +15,12 @@ in VS_OUT {
     }lights[4];
 }fs_in;
 
-uniform sampler2D texture_diffuse;
-uniform bool has_diffuse_texture;
-uniform bool u_linear_diffuse;
-uniform sampler2D texture_base_color;
-uniform bool has_base_color_texture;
-uniform sampler2D texture_normal;
-uniform bool has_normal_texture;
-uniform bool u_normal_map_flip_green_channel;
-uniform sampler2D texture_roughness;
-uniform bool has_roughness_texture;
-uniform sampler2D texture_metallic;
-uniform bool has_metallic_texture;
-uniform sampler2D texture_ao;
-uniform bool has_ao_texture;
-uniform sampler2D texture_emissive;
-uniform bool has_alpha_texture;
-uniform sampler2D texture_alpha;
-
+uniform samplerCube ibl_irradiance_cubemap;
 uniform float u_metallic;
 uniform float u_roughness;
 uniform vec3 u_basecolor;
 
+#define IrradianceOnly false
 #define PI 3.1415926
 
 struct FragAttribute {
@@ -44,8 +29,11 @@ struct FragAttribute {
   float roughness;
   float metalness;
   float ao;
-  vec3 emissive;
 }frag_attribute;
+
+struct EnvLight{
+  vec3 ks;
+}eng_light;
 
 vec3 ToLinear(vec3 v) { return pow(v,     vec3(2.2)); }
 vec3 ToSRGB(vec3 v)   { return pow(v, vec3(1.0/2.2)); }
@@ -123,6 +111,7 @@ vec3 CookTorranceBRDF(FragAttribute frag_attribute, vec3 viewdir, vec3 lightdir,
   F0 = mix(F0, frag_attribute.base_color, frag_attribute.metalness);
   // vec3 F = FresnelUEApprox(HdotV, F0);
   vec3 F = FresnelSchlick(HdotV, F0);
+  eng_light.ks = FresnelSchlick(NdotV, F0);
   vec3 ks = F;
   vec3 kd = vec3(1.0) - ks;
 
@@ -142,45 +131,19 @@ vec3 CookTorranceBRDF(FragAttribute frag_attribute, vec3 viewdir, vec3 lightdir,
 
 void main()
 { 
-  // alpha test
-  if(has_alpha_texture) {
-      float alpha = texture(texture_alpha, fs_in.TexCoords).r;
-      if(alpha<0.9) discard;
-  }
-
   frag_attribute.normal = normalize(fs_in.Normal); 
-  // it seems something wrong with the normal map of sponza.obj
-  if(has_normal_texture) {
-      frag_attribute.normal = texture(texture_normal, fs_in.TexCoords).rgb;
-      if(u_normal_map_flip_green_channel) {
-        frag_attribute.normal = frag_attribute.normal * vec3(2.0, -2.0, 2.0) + vec3(-1.0, 1.0, -1.0);
-      } else {
-        frag_attribute.normal = frag_attribute.normal * 2.0 - vec3(1.0);
-      }
-      frag_attribute.normal = normalize(frag_attribute.normal);
-      frag_attribute.normal = normalize(fs_in.TBN * frag_attribute.normal);
-  }
+  // if(has_normal_texture) {
+  //     frag_attribute.normal = texture(texture_normal, fs_in.TexCoords).rgb;
+  //     frag_attribute.normal = frag_attribute.normal * 2.0 - vec3(1.0);
+  //     frag_attribute.normal = normalize(frag_attribute.normal);
+  //     frag_attribute.normal = normalize(fs_in.TBN * frag_attribute.normal);
+  // }
 
-  frag_attribute.base_color = u_basecolor;
-  if(has_base_color_texture) {
-    frag_attribute.base_color = texture(texture_base_color, fs_in.TexCoords).rgb;
-  }
-  else if(has_diffuse_texture) {
-      frag_attribute.base_color = texture(texture_diffuse, fs_in.TexCoords).rgb;
-  }
-  
-  frag_attribute.ao = 0.0;
-  if(has_ao_texture) {
-    frag_attribute.ao = texture(texture_ao, fs_in.TexCoords).r;
-  }
+  frag_attribute.base_color = u_basecolor;  
   frag_attribute.metalness = u_metallic;
-  if(has_metallic_texture) {
-    frag_attribute.metalness = texture(texture_metallic, fs_in.TexCoords).r;
-  }
   frag_attribute.roughness = u_roughness;
-  if(has_roughness_texture) {
-    frag_attribute.roughness = texture(texture_roughness, fs_in.TexCoords).r;
-  }
+  frag_attribute.ao = 1.0;
+  vec4 ambient_irradiance = texture(ibl_irradiance_cubemap, fs_in.WorldNormal);
 
   vec3 Lo = vec3(0.0);
   for(int i=0; i<4; i++) {
@@ -189,12 +152,18 @@ void main()
     vec3 radiance = fs_in.lights[i].color * fs_in.lights[i].attenuation * fs_in.lights[i].intensity;
     Lo += CookTorranceBRDF(frag_attribute, view_dir, light_dir, radiance);
   }
-  vec3 ambient = vec3(0.03) * frag_attribute.base_color;
-  Lo += ambient;
+  if(IrradianceOnly) {
+    Lo = vec3(0.0);
+  }
+  // irradiance color
+  vec3 kS = eng_light.ks;
+  vec3 kD = vec3(1.0) - kS;
+  kD *= (1.0 - frag_attribute.metalness);
+  Lo += kD * ambient_irradiance.rgb * frag_attribute.ao * frag_attribute.base_color;
+  // tone mapping
   Lo = ACESToneMapping(Lo, 1.0);
   // Lo = ReinhardToneMapping(Lo, 1.0);
+
   Lo = ToSRGB(Lo);
-  // FragColor = vec4(vec3(frag_attribute.base_color), 1.0);
-  // FragColor = vec4(vec3(frag_attribute.normal), 1.0);
   FragColor = vec4(Lo, 1.0);
 }
