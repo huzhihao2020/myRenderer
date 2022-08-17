@@ -16,9 +16,13 @@ public:
   ImGuiIO *GetMainIO() const { return io_; }
   int test_button_status_ = 0;
 
+  const float* GetLightInputs() const { return light_color_;};
+  const float* GetColorPickerSphere() const { return sphere_color_;};
+
 private:
-  ImVec4 clear_color_ = {0.2f, 0.3f, 0.4f, 1.0f}; // not used yet
-  float  vec4f_[4]    = {0.1f, 0.2f, 0.3f, 0.4f}; // not used yet
+  float sphere_color_[4] = {0.7f, 0.05f, 0.05f, 1.0f};  
+  float light_color_[4] = {0.7f, 0.7f, 0.7f, 0.3f}; 
+  float vec4f_[4] = {0.1f, 0.2f, 0.3f, 0.4f};       // not used yet
   bool show_window_ = true;
   ImGuiIO *io_ = nullptr;
   ImGuiStyle *style_;

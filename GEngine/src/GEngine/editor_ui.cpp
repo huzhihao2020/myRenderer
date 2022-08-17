@@ -1,6 +1,7 @@
 #include "editor_ui.h"
 #include "app.h"
 #include "glfw_window.h"
+#include "imgui.h"
 #include "log.h"
 #include "render_system.h"
 #include <glm/glm.hpp>
@@ -59,14 +60,15 @@ void GEngine::CEditorUI::Tick() {
   ImGui::Text("[Q]: Enable/Disable Cursor");
   ImGui::Text("[Up/Down]: Change Move Speed of Camera"); 
   ImGui::Text("MousePos: %d, %d", static_cast<int>(io_->MousePos.x), static_cast<int>(io_->MousePos.y));
-  if(ImGui::Button("Test Button")) { 
-    GE_INFO("Test Button Clicked."); 
+  ImGui::SameLine(); ImGui::Text("Mouse speed: %.2f", camera->GetMoveSpeed());
+  if(ImGui::Button("Debug Mode")) { 
+    GE_INFO("Button Clicked."); 
     test_button_status_ ^= 1;
   }
-  ImGui::InputFloat3("input float3", vec4f_);
-  ImGui::DragFloat3("drag float3", vec4f_, 0.01f, 0.0f, 1.0f);
-  ImGui::SliderFloat3("slider float3", vec4f_, 0.0f, 1.0f);
-  ImGui::ColorEdit3("clear color", (float*)&clear_color_); // color picker
+  // ImGui::DragFloat3("Test", vec4f_, 0.01f, 0.0f, 1.0f);
+  // ImGui::SliderFloat3("light color", light_color_, 0.0f, 1.0f);
+  ImGui::ColorEdit3("Sphere Color", sphere_color_); // color picker
+  ImGui::DragFloat4("light (rgbI)", light_color_, 0.001f, 0.0f, 1.0f);
   ImGui::End();
   // imgui end
   ImGui::Render();

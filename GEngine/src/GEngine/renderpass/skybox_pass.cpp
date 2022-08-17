@@ -18,13 +18,20 @@ GEngine::CSkyboxPass::~CSkyboxPass() {}
 void GEngine::CSkyboxPass::Init() {
   glfwMakeContextCurrent(CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow());
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+  // std::vector<std::string> faces{
+  //     "../../assets/textures/skybox/right.jpg",
+  //     "../../assets/textures/skybox/left.jpg",
+  //     "../../assets/textures/skybox/top.jpg",  
+  //     "../../assets/textures/skybox/bottom.jpg",
+  //     "../../assets/textures/skybox/front.jpg",
+  //     "../../assets/textures/skybox/back.jpg"};
   std::vector<std::string> faces{
-      "../../assets/textures/skybox/right.jpg",
-      "../../assets/textures/skybox/left.jpg",
-      "../../assets/textures/skybox/top.jpg",  
-      "../../assets/textures/skybox/bottom.jpg",
-      "../../assets/textures/skybox/front.jpg",
-      "../../assets/textures/skybox/back.jpg"};
+      "../../assets/textures/skybox_indoor/right.png",
+      "../../assets/textures/skybox_indoor/left.png",
+      "../../assets/textures/skybox_indoor/top.png",
+      "../../assets/textures/skybox_indoor/bottom.png",
+      "../../assets/textures/skybox_indoor/front.png",
+      "../../assets/textures/skybox_indoor/back.png"};
 
   std::string v_path("../../GEngine/src/GEngine/renderpass/skybox_shader_vert.glsl");
   std::string f_path("../../GEngine/src/GEngine/renderpass/skybox_shader_frag.glsl");
@@ -36,6 +43,20 @@ void GEngine::CSkyboxPass::Init() {
   skybox_texture->SetSWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
   skybox_texture->SetTWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
   skybox_texture->SetRWrapMode(GEngine::CTexture::EWrapMode::kClampToEdge);
+
+  auto slash_pos = faces[0].find_last_of('/');
+  auto filename = faces[0].substr(slash_pos+1, faces[0].size());
+  auto dot_pos = filename.find_last_of('.');
+  auto fileformat = filename.substr(dot_pos+1, filename.size());
+  if(fileformat==std::string("jpg")) {
+    skybox_texture->external_format_ = CTexture::EPixelFormat::kRGB;
+    skybox_texture->internal_format_ = CTexture::EPixelFormat::kRGB;
+  }
+  else if(fileformat==std::string("png")) {
+    skybox_texture->external_format_ = CTexture::EPixelFormat::kRGBA;
+    skybox_texture->internal_format_ = CTexture::EPixelFormat::kRGB;
+
+  }
   LoadCubemapFromFiles(faces, skybox_texture);
   shader_->Use();
   shader_->SetTexture("cubemap_texture", skybox_texture);

@@ -166,13 +166,47 @@ GLvoid GEngine::CApp::RunMainLoop() {
     }
 
     if(render_pbr_sphere) {
+      float x = 7.5f;
+      std::vector<glm::vec3> lights_pos = {
+          glm::vec3(-x,  x, 10.0),
+          glm::vec3(-x, -x, 10.0),
+          glm::vec3( x,  x, 10.0),
+          glm::vec3( x, -x, 10.0)
+      };
+
+      // lights Color With Intensity
+      auto lights_c3_r1 = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->GetLightInputs();
+      std::vector<glm::vec3> lights_color(4, {lights_c3_r1[0], lights_c3_r1[1], lights_c3_r1[2]});
+      double intensity = 500 * lights_c3_r1[3];
+      double lights_intensity[4] = {intensity, intensity, intensity, intensity};
+      // {
+      //     glm::vec3(0.7, 0.7, 0.7), glm::vec3(0.7, 0.7, 0.7),
+      //     glm::vec3(0.7, 0.7, 0.7), glm::vec3(0.7, 0.7, 0.7)
+      // };
+
+      auto sphereColor = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->GetColorPickerSphere();
+      glm::vec3 sphere_color({sphereColor[0], sphereColor[1], sphereColor[2]});
+
       pbr_shader->Use();
+      pbr_shader->SetVec3("u_view_pos", CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetPosition());
       pbr_shader->SetMat4("u_view", view);
       pbr_shader->SetMat4("u_projection", projection);
+      pbr_shader->SetVec3("u_light0_pos", lights_pos[0]);
+      pbr_shader->SetVec3("u_light1_pos", lights_pos[1]);
+      pbr_shader->SetVec3("u_light2_pos", lights_pos[2]);
+      pbr_shader->SetVec3("u_light3_pos", lights_pos[3]);
+      pbr_shader->SetVec3("u_light0_color", lights_color[0]);
+      pbr_shader->SetVec3("u_light1_color", lights_color[1]);
+      pbr_shader->SetVec3("u_light2_color", lights_color[2]);
+      pbr_shader->SetVec3("u_light3_color", lights_color[3]);
+      pbr_shader->SetFloat("u_light0_intensity", lights_intensity[0]);
+      pbr_shader->SetFloat("u_light1_intensity", lights_intensity[1]);
+      pbr_shader->SetFloat("u_light2_intensity", lights_intensity[2]);
+      pbr_shader->SetFloat("u_light3_intensity", lights_intensity[3]);
       int nrRows = 7;
       int nrColumns = 7;
       float spacing = 2.5;
-      pbr_shader->SetVec3("u_basecolor", glm::vec3(0.5, 0.0, 0.0));
+      pbr_shader->SetVec3("u_basecolor", sphere_color);
       for (int row = 0; row < nrRows; ++row) {
         pbr_shader->SetFloat("u_metallic", (float)row / (float)nrRows);
         for (int col = 0; col < nrColumns; ++col) {
@@ -183,13 +217,6 @@ GLvoid GEngine::CApp::RunMainLoop() {
           CSingleton<CRenderSystem>()->RenderSphere();
         }
       }
-      float x = 7.5f;
-      std::vector<glm::vec3> lights_pos = {
-        glm::vec3(-x,  x, 10.0),
-        glm::vec3(-x, -x, 10.0),
-        glm::vec3( x,  x, 10.0),
-        glm::vec3( x, -x, 10.0),
-      };
       light_shader->Use();
       light_shader->SetMat4("u_view", view);
       light_shader->SetMat4("u_projection", projection);

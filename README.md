@@ -26,9 +26,9 @@ The `.xcodeproj` file will be written to `build/`
 
 ![GEngine .glTF model image](images/GEngine-glTF-PBR-debug.jpeg)
 
-* IBL - Irradiance
+* IBL
 
-![GEngine .glTF model image](images/GEngine-IBL-irradiance.jpeg)
+![GEngine .glTF model image](images/GEngine-IBL.jpeg)
 
 ## Files
 
