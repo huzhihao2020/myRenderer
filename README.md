@@ -14,9 +14,9 @@ The `.xcodeproj` file will be written to `build/`
 
 ![GEngine .obj model image](images/GEngine-OBJ.jpeg)
 
-* PBR (metallic-roughness)
+* PBR (MR) with Image Based Lighting
 
-![GEngine .obj model image](images/GEngine-PBR.jpeg)
+![GEngine .obj model image](images/GEngine-IBL.jpeg)
 
 * glTF PBR Model `(assets/model/sponza-gltf-pbr/sponza.gltf)`
 
@@ -25,10 +25,6 @@ The `.xcodeproj` file will be written to `build/`
 * glTF PBR Model-Debug  `(assets/model/sponza-gltf-pbr/sponza.gltf)`
 
 ![GEngine .glTF model image](images/GEngine-glTF-PBR-debug.jpeg)
-
-* IBL
-
-![GEngine .glTF model image](images/GEngine-IBL.jpeg)
 
 ## Files
 
