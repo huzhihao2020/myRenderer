@@ -16,6 +16,7 @@ GEngine::CSkyboxPass::CSkyboxPass(const std::string &name, int order)
 GEngine::CSkyboxPass::~CSkyboxPass() {}
 
 void GEngine::CSkyboxPass::Init() {
+  glfwMakeContextCurrent(CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow());
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
   std::vector<std::string> faces{
       "../../assets/textures/skybox/right.jpg",
@@ -87,9 +88,7 @@ void GEngine::CSkyboxPass::LoadCubemapFromFiles(const std::vector<std::string>& 
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
-  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 8);
-
   glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }

@@ -40,7 +40,7 @@ private:
   unsigned int shader_program_ID_ = 0;
   // number of textures bound to specific shader instance
   int bound_textures_num_ = 0; 
-  // ["textureName": textureID, texturePtr] for each  bound texture
-  std::map<std::string, std::tuple<int, std::shared_ptr<GEngine::CTexture>>> bound_textures_;
+  // ["textureName": texture_slot, texturePtr, uniform_location] for each  bound texture
+  std::map<std::string, std::tuple<int, std::shared_ptr<GEngine::CTexture>, int>> bound_textures_;
 };
 } // namespace GEngine

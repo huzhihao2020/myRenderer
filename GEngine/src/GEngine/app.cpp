@@ -27,8 +27,9 @@ GLvoid GEngine::CApp::Init()
   CSingleton<CInputSystem>()->Init(); 
   CSingleton<CRenderSystem>()->Init();
   // renderpass init
-  for(auto& pass : CSingleton<CRenderSystem>()->GetRenderPass()) {
-    pass->Init();
+  auto passes = CSingleton<CRenderSystem>()->GetRenderPass();
+  for (int i = 0; i < passes.size(); i++) {
+    passes[i]->Init();
   }
 }
 
@@ -75,10 +76,17 @@ GLvoid GEngine::CApp::RunMainLoop() {
   // auto ibl_irradiance_texture = std::any_cast<std::shared_ptr<CTexture>>(ibl_irradiance_data);
 
   if (render_pbr_sphere) {
+      // Load brdf_lut
+    std::string lut_path = std::string("../../assets/textures/IBL/ibl_brdf_lut.png");
+    auto sampler = std::make_shared<CSampler>(
+      CSampler::EMinFilter::kLinear, CSampler::EMagFilter::kLinear,
+      CSampler::EWrapMode::kClampToEdge, CSampler::EWrapMode::kClampToEdge);
+
     auto ibl_irradiance_texture = CSingleton<CRenderSystem>()->texture_center_["irradiance_texture"];
     auto ibl_prefiltered_texture = CSingleton<CRenderSystem>()->texture_center_["prefiltered_texture"];
-    auto ibl_brdf_lut = CSingleton<CRenderSystem>()->texture_center_["ibl_brdf_lut"];
-    // auto ibl_irradiance_texture = CSingleton<CRenderSystem>()->texture_center_["skybox_texture"];
+    auto ibl_brdf_lut = std::make_shared<CTexture>(lut_path, CTexture::ETarget::kTexture2D, true, sampler);
+    // auto ibl_brdf_lut = CSingleton<CRenderSystem>()->texture_center_["ibl_brdf_lut"];
+
     if (!ibl_irradiance_texture) {
       GE_WARN("ibl_irradiance_texture not exists!");
     }
@@ -88,13 +96,15 @@ GLvoid GEngine::CApp::RunMainLoop() {
     if (!ibl_brdf_lut) {
       GE_WARN("ibl_brdf_lut not exists!");
     }
-    pbr_shader->SetTexture("ibl_irradiance_cubemap", ibl_irradiance_texture);
-    pbr_shader->SetTexture("ibl_prefilter_map", ibl_prefiltered_texture);
-    pbr_shader->SetTexture("ibl_brdf_lut", ibl_brdf_lut);
+
+    pbr_shader->SetTexture(std::string("prefilter_cubemap"), ibl_prefiltered_texture);
+    pbr_shader->SetTexture(std::string("irradiance_cubemap"), ibl_irradiance_texture);
+    pbr_shader->SetTexture(std::string("brdf_lut"), ibl_brdf_lut);
   }
 
   // render loop
   while (!glfwWindowShouldClose(window_)) {
+    auto err = glGetError();
     CalculateTime();
     CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->Tick();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -194,7 +204,9 @@ GLvoid GEngine::CApp::RunMainLoop() {
 
     // ticking main GUI
     CSingleton<CRenderSystem>()->GetOrCreateMainUI()->Tick();
-
+    if(err!=GL_NO_ERROR) {
+      GE_WARN("gl Error {0}", err);
+    }
     glfwPollEvents();
     glfwSwapBuffers(window_);
   }

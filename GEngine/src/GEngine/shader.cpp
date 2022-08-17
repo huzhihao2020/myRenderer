@@ -139,6 +139,7 @@ void GEngine::CShader::SetMat4(const std::string &name,
 }
 
 void GEngine::CShader::SetTexture(const std::string &name, const std::shared_ptr<GEngine::CTexture> texture) {
+  glUseProgram(shader_program_ID_);
   if (bound_textures_.find(name) != bound_textures_.end()) {
     // [name] already exists, overwrite with new texture
     auto &item = bound_textures_[name];
@@ -147,11 +148,12 @@ void GEngine::CShader::SetTexture(const std::string &name, const std::shared_ptr
     glBindTexture(static_cast<GLuint>(texture->GetTarget()), texture->id_);
   } else {
     // register a new texture
-    int binding_index = bound_textures_num_;
-    glActiveTexture(GL_TEXTURE0 + binding_index);
-    glUniform1i(glGetUniformLocation(shader_program_ID_, name.c_str()), binding_index);
+    int binding_slot_index = bound_textures_num_;
+    glActiveTexture(GL_TEXTURE0 + binding_slot_index);
+    auto uniform_location = glGetUniformLocation(shader_program_ID_, name.c_str());
+    glUniform1i(uniform_location, binding_slot_index);
     glBindTexture(static_cast<GLenum>(texture->GetTarget()), texture->id_);
-    bound_textures_[name] = std::make_tuple(binding_index, texture);
+    bound_textures_[name] = std::make_tuple(binding_slot_index, texture, uniform_location);
     bound_textures_num_++;
   }
 }

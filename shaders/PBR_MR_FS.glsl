@@ -16,12 +16,13 @@ in VS_OUT {
     }lights[4];
 }fs_in;
 
-uniform samplerCube ibl_irradiance_cubemap;
-uniform samplerCube ibl_prefilter_map;
-uniform sampler2D ibl_brdf_lut;
 uniform float u_metallic;
 uniform float u_roughness;
 uniform vec3 u_basecolor;
+
+uniform samplerCube irradiance_cubemap;
+uniform samplerCube prefilter_cubemap;
+uniform sampler2D brdf_lut;
 
 #define IrradianceOnly false
 #define PI 3.1415926
@@ -151,9 +152,8 @@ void main()
   frag_attribute.metalness = u_metallic;
   frag_attribute.roughness = u_roughness;
   frag_attribute.ao = 1.0;
-  vec4 ambient_irradiance = texture(ibl_irradiance_cubemap, fs_in.WorldNormal);
 
-  vec3 N = normalize(fs_in.WorldNormal);
+  vec3 N = normalize(fs_in.Normal);
   vec3 V = normalize(-fs_in.FragPosViewspace);
   vec3 R = reflect(-V, N); 
 
@@ -168,6 +168,7 @@ void main()
     Lo = vec3(0.0);
   }
   // irradiance color
+  vec4 ambient_irradiance = texture(irradiance_cubemap, fs_in.WorldNormal);
   vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), env_ibl.F0, frag_attribute.roughness);
 
   vec3 kS = F;
@@ -175,22 +176,22 @@ void main()
   kD *= (1.0 - frag_attribute.metalness);
   vec3 ibl_diffuse = ambient_irradiance.rgb * frag_attribute.base_color;
   // ibl specular
-  const float MAX_REFLECTION_LOD = 4.0;
-  vec4 prefilteredColor = textureLod(ibl_prefilter_map, R, frag_attribute.roughness * MAX_REFLECTION_LOD);    
-  // vec4 brdf  = texture(ibl_brdf_lut, fs_in.TexCoords);
-  // vec4 brdf  = texture(ibl_brdf_lut, vec2(max(dot(N, V), 0.0), frag_attribute.roughness));
-  // vec3 ibl_specular = prefilteredColor * (F * brdf.x + brdf.y);
+  const float MAX_REFLECTION_LOD = 8.0;
+  float lod_level = MAX_REFLECTION_LOD * frag_attribute.roughness;
+  vec4 prefilteredColor = textureLod(prefilter_cubemap, R, lod_level);    
+  vec4 brdf  = texture(brdf_lut, vec2(max(dot(N, V), 0.0), frag_attribute.roughness));
+  vec3 ibl_specular = prefilteredColor.rgb * (F * brdf.x + brdf.y);
 
-  // vec3 ambient = (kD * ibl_diffuse + ibl_specular) * frag_attribute.ao;
+  vec3 ambient = (kD * ibl_diffuse + ibl_specular) * frag_attribute.ao;
 
-  // Lo += ambient;
+  Lo += ambient;
   // tone mapping
   Lo = ACESToneMapping(Lo, 1.0);
   // Lo = ReinhardToneMapping(Lo, 1.0);
 
   Lo = ToSRGB(Lo);
   // FragColor = vec4(brdf.r, brdf.g, 0.0, 1.0);
-  // FragColor = vec4(frag_attribute.roughness, frag_attribute.metalness, 0.0, 1.0);
-  // FragColor = vec4(Lo, 1.0);
-  FragColor = prefilteredColor;
+  // FragColor = vec4(ambient, 1.0);
+  FragColor = vec4(Lo, 1.0);
+  // FragColor = brdf;
 }
