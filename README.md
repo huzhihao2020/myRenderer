@@ -16,7 +16,9 @@ The `.xcodeproj` file will be written to `build/`
 
 * PBR (MR) with Image Based Lighting
 
-![GEngine .obj model image](images/GEngine-IBL.jpeg)
+![GEngine .obj model image](images/GEngine-IBL-1.jpeg)
+
+![GEngine .obj model image](images/GEngine-IBL-2.jpeg)
 
 * glTF PBR Model `(assets/model/sponza-gltf-pbr/sponza.gltf)`
 
