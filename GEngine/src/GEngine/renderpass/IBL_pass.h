@@ -20,5 +20,8 @@ private:
   std::shared_ptr<GEngine::CTexture> prefiltered_texture_;
   std::shared_ptr<GEngine::CTexture> specular_brdf_lut_;
   std::shared_ptr<GEngine::CFrameBuffer> framebuffer_;
+
+  // test
+  unsigned int fbo_, rbo_;
 };
 } // namespace GEngine

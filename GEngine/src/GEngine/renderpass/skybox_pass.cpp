@@ -18,20 +18,20 @@ GEngine::CSkyboxPass::~CSkyboxPass() {}
 void GEngine::CSkyboxPass::Init() {
   glfwMakeContextCurrent(CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow());
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-  std::vector<std::string> faces{
-      "../../assets/textures/skybox_outdoor/right.png",
-      "../../assets/textures/skybox_outdoor/left.png",
-      "../../assets/textures/skybox_outdoor/top.png",  
-      "../../assets/textures/skybox_outdoor/bottom.png",
-      "../../assets/textures/skybox_outdoor/front.png",
-      "../../assets/textures/skybox_outdoor/back.png"};
   // std::vector<std::string> faces{
-  //     "../../assets/textures/skybox_indoor/right.png",
-  //     "../../assets/textures/skybox_indoor/left.png",
-  //     "../../assets/textures/skybox_indoor/top.png",
-  //     "../../assets/textures/skybox_indoor/bottom.png",
-  //     "../../assets/textures/skybox_indoor/front.png",
-  //     "../../assets/textures/skybox_indoor/back.png"};
+  //     "../../assets/textures/skybox_outdoor/right.png",
+  //     "../../assets/textures/skybox_outdoor/left.png",
+  //     "../../assets/textures/skybox_outdoor/top.png",  
+  //     "../../assets/textures/skybox_outdoor/bottom.png",
+  //     "../../assets/textures/skybox_outdoor/front.png",
+  //     "../../assets/textures/skybox_outdoor/back.png"};
+  std::vector<std::string> faces{
+      "../../assets/textures/skybox_indoor/right.png",
+      "../../assets/textures/skybox_indoor/left.png",
+      "../../assets/textures/skybox_indoor/top.png",
+      "../../assets/textures/skybox_indoor/bottom.png",
+      "../../assets/textures/skybox_indoor/front.png",
+      "../../assets/textures/skybox_indoor/back.png"};
 
   std::string v_path("../../GEngine/src/GEngine/renderpass/skybox_shader_vert.glsl");
   std::string f_path("../../GEngine/src/GEngine/renderpass/skybox_shader_frag.glsl");

@@ -6,7 +6,6 @@
 #include "GEngine/input_system.h"
 #include "GEngine/shader.h"
 #include "GEngine/log.h"
-#include "GEngine/model.h"
 #include "GEngine/mesh.h"
 #include "GEngine/texture.h"
 #include "singleton.h"
@@ -50,8 +49,8 @@ GLvoid GEngine::CApp::RunMainLoop() {
 
   bool render_light        = 0;
   bool render_sponza_phong = 0;
-  bool render_sponza_pbr   = 0;
-  bool render_pbr_sphere   = 1;
+  bool render_sponza_pbr   = 1;
+  bool render_pbr_sphere   = 0;
 
   // texture
   if(render_light) {

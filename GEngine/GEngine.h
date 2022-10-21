@@ -9,7 +9,6 @@
 #include "GEngine/input_system.h"
 #include "GEngine/log.h"
 #include "GEngine/mesh.h"
-#include "GEngine/model.h"
 #include "GEngine/render_pass.h"
 #include "GEngine/render_system.h"
 #include "GEngine/renderbuffer.h"

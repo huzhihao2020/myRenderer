@@ -42,7 +42,9 @@ void GEngine::CFrameBuffer::SetAttachment(GLenum attachment_point,
   case CAttachment::EAttachmentType::kTexture:
     if(auto texture = attachment.GetTexture()){
       glBindTexture(static_cast<GLenum>(texture->GetTarget()), texture->id_);
-      glFramebufferTexture(GL_FRAMEBUFFER, attachment_point, static_cast<GLenum>(texture->GetTarget()), texture->id_);
+      // fixme: ibl_pass
+      glFramebufferTexture(GL_FRAMEBUFFER, attachment_point, texture->id_, 0);
+      // glFramebufferTexture(GL_FRAMEBUFFER, attachment_point, static_cast<GLenum>(texture->GetTarget()), texture->id_);
     }
     else {
       glFramebufferTexture2D(GL_FRAMEBUFFER, attachment_point, GL_RENDERBUFFER, 0, 0);

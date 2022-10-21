@@ -2,7 +2,6 @@
 #include "GEngine/camera.h"
 #include "GEngine/editor_ui.h"
 #include "GEngine/glfw_window.h"
-#include "GEngine/model.h"
 #include "GEngine/render_pass.h"
 #include "GEngine/shader.h"
 #include "GEngine/singleton.h"

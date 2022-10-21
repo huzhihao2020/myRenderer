@@ -15,8 +15,14 @@ void GEngine::CIBLPass::Init() {
   glfwMakeContextCurrent(CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow());
   // Init Irradiance Map
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-  
-  framebuffer_ = std::make_shared<CFrameBuffer>();
+
+  glGenFramebuffers(1, &fbo_);
+  glGenRenderbuffers(1, &rbo_);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+  glBindRenderbuffer(GL_RENDERBUFFER, rbo_);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_);
+
   irradiance_texture_ = std::make_shared<CTexture>(CTexture::ETarget::kTextureCubeMap);
   irradiance_texture_->SetSWrapMode(CTexture::EWrapMode::kClampToEdge),
   irradiance_texture_->SetTWrapMode(CTexture::EWrapMode::kClampToEdge),
@@ -25,6 +31,7 @@ void GEngine::CIBLPass::Init() {
   irradiance_texture_->SetMagFilter(CTexture::EMagFilter::kLinear);
   irradiance_texture_->SetWidth(32);
   irradiance_texture_->SetHeight(32);
+
   glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_texture_->id_);
   for(unsigned int i=0; i<6; i++) {
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F,
@@ -36,16 +43,21 @@ void GEngine::CIBLPass::Init() {
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, static_cast<GLint>(irradiance_texture_->GetRWrapMode()));
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, static_cast<GLint>(irradiance_texture_->GetMinFilter())); 
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, static_cast<GLint>(irradiance_texture_->GetMagFilter()));
-
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-  framebuffer_->SetColorAttachment(CAttachment(irradiance_texture_));
-  auto renderbuffer = std::make_shared<CRenderBuffer>();
-  renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, 32, 32);
-  framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+  // framebuffer_->SetColorAttachment(CAttachment(irradiance_texture_));
+  // auto renderbuffer = std::make_shared<CRenderBuffer>();
+  // renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, 32, 32);
+  // framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
+  auto err = glGetError();
   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
     GE_WARN("Framebuffer object is not complete");
   }
+
+  // make sure the skybox_texture is in texture_center_
+  glFinish();
 
   // auto skybox_cubemap = CSingleton<GEngine::CRenderSystem>()->GetAnyDataByName("skybox_cubemap");
   // auto skybox_texture = std::any_cast<std::shared_ptr<CTexture>>(skybox_cubemap);
@@ -93,7 +105,7 @@ void GEngine::CIBLPass::GenerateIrradianceMap(std::shared_ptr<GEngine::CTexture>
   // render irradiance map to off-screen framebuffer
   shader_->Use();
   shader_->SetMat4("projection", capture_projection);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_->GetID());
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
   glViewport(0, 0, 32, 32);
   for(unsigned int i=0; i<6; i++) {
     shader_->SetMat4("view", capture_views[i]);
@@ -121,11 +133,11 @@ void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture
   prefiltered_texture_->SetWidth(256);
   prefiltered_texture_->SetHeight(256);
   prefiltered_texture_->has_mipmap_ = true;
-  glBindTexture(GL_TEXTURE_CUBE_MAP, prefiltered_texture_->id_);
 
+  glBindTexture(GL_TEXTURE_CUBE_MAP, prefiltered_texture_->id_);
   for(unsigned int i=0; i<6; i++) {
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, prefiltered_texture_->GetWidth(), prefiltered_texture_->GetHeight(), 0,
-                 GL_RGB, GL_FLOAT, nullptr);
+                 GL_RGB, GL_FLOAT, NULL);
   }
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, static_cast<GLint>(prefiltered_texture_->GetSWrapMode()));
   glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, static_cast<GLint>(prefiltered_texture_->GetTWrapMode()));
@@ -136,15 +148,11 @@ void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture
   glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
   glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
+  // framebuffer_->SetColorAttachment(CAttachment(prefiltered_texture_));
+  // auto renderbuffer = std::make_shared<CRenderBuffer>();
+  // renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, prefiltered_texture_->GetWidth(), prefiltered_texture_->GetHeight());
+  // framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
 
-  framebuffer_ = std::make_shared<CFrameBuffer>();
-  framebuffer_->SetColorAttachment(CAttachment(prefiltered_texture_));
-  auto renderbuffer = std::make_shared<CRenderBuffer>();
-  renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, prefiltered_texture_->GetWidth(), prefiltered_texture_->GetHeight());
-  framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-      GE_WARN("Framebuffer object is not completed in IBL pass");
-    }
 
   // render to cubemap texture
   std::string v_path("../../GEngine/src/GEngine/renderpass/ibl_irradiance_vert.glsl");
@@ -165,11 +173,18 @@ void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture
   shader_->SetTexture("cubemap_texture", skybox_texture);
   shader_->SetMat4("projection", capture_projection);
 
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
+  // glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_->GetID());
   for(unsigned int level=0; level<max_mip_levels; level++) {
     unsigned int width = static_cast<unsigned int>(prefiltered_texture_->GetWidth() * std::pow(0.5, level));
     unsigned int height = static_cast<unsigned int>(prefiltered_texture_->GetHeight() * std::pow(0.5, level));
-    renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, width, height);
-    framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo_);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      GE_WARN("Framebuffer object is not completed in IBL pass");
+    }
+    // renderbuffer->InitialzeStorage(CRenderBuffer::EPixelFormat::kDepthComponent24, width, height);
+    // framebuffer_->SetDepthAttachment(CAttachment(renderbuffer));
     glViewport(0, 0, width, height);
 
     float roughness = (float)level / (float)(max_mip_levels - 1);

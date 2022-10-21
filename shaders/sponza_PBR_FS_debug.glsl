@@ -196,16 +196,16 @@ void main()
   // Lo = ReinhardToneMapping(Lo, 1.0);
   Lo = ToSRGB(Lo);
 
-  if(gl_FragCoord.x < 0.2 * u_viewport_size[0]) {
+  if(gl_FragCoord.x < 2.0 * 0.2 * u_viewport_size[0]) {
     FragColor = vec4(Lo, 1.0);
   }
-  else if(gl_FragCoord.x < 0.4 * u_viewport_size[0]) {
+  else if(gl_FragCoord.x < 2.0 * 0.4 * u_viewport_size[0]) {
     FragColor = vec4(vec3(frag_attribute.base_color), 1.0);
   }
-  else if(gl_FragCoord.x < 0.6 * u_viewport_size[0]) {
+  else if(gl_FragCoord.x < 2.0 * 0.6 * u_viewport_size[0]) {
     FragColor = vec4(frag_attribute.normal, 1.0);
   }
-  else if(gl_FragCoord.x < 0.8 * u_viewport_size[0]) {
+  else if(gl_FragCoord.x < 2.0 * 0.8 * u_viewport_size[0]) {
     FragColor = vec4(vec3(metalness_roughness), 1.0);
   }
   else {
