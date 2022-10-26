@@ -43,9 +43,9 @@ GEngine::Bone::Bone(const std::string &name, int id, const aiNodeAnim *channel)
 
 // interpolate the matrix between last keyframe and next keyframe
 void GEngine::Bone::Update(float animationTime) {
-  glm::mat4 translation = InterpolatePosition(animationTime);
-  glm::mat4 rotation = InterpolateRotation(animationTime);
-  glm::mat4 scale = InterpolateScaling(animationTime);
+  glm::mat4 translation = glm::translate(glm::mat4(1.0f), InterpolatePosition(animationTime));
+  glm::mat4 rotation = glm::toMat4(InterpolateRotation(animationTime));
+  glm::mat4 scale = glm::scale(glm::mat4(1.0f), InterpolateScaling(animationTime));
   local_transform_ = translation * rotation * scale;
 }
 
@@ -88,9 +88,9 @@ int GEngine::Bone::GetScaleIndex(float animationTime) {
   assert(0);
 }
 
-glm::mat4 GEngine::Bone::InterpolatePosition(float animationTime) {
+glm::vec3 GEngine::Bone::InterpolatePosition(float animationTime) {
   if (num_positions_ == 1)
-    return glm::translate(glm::mat4(1.0f), positions_[0].position_);
+    return positions_[0].position_;
 
   int p0Index = GetPositionIndex(animationTime);
   int p1Index = p0Index + 1;
@@ -100,13 +100,13 @@ glm::mat4 GEngine::Bone::InterpolatePosition(float animationTime) {
   glm::vec3 finalPosition =
       glm::mix(positions_[p0Index].position_, positions_[p1Index].position_,
                scaleFactor);
-  return glm::translate(glm::mat4(1.0f), finalPosition);
+  return finalPosition;
+  // return glm::translate(glm::mat4(1.0f), finalPosition);
 }
 
-glm::mat4 GEngine::Bone::InterpolateRotation(float animationTime) {
+glm::quat GEngine::Bone::InterpolateRotation(float animationTime) {
   if (num_rotations_ == 1) {
-    auto rotation = glm::normalize(rotations_[0].orientation_);
-    return glm::toMat4(rotation);
+    return glm::normalize(rotations_[0].orientation_);
   }
 
   int p0Index = GetRotationIndex(animationTime);
@@ -118,12 +118,13 @@ glm::mat4 GEngine::Bone::InterpolateRotation(float animationTime) {
       glm::slerp(rotations_[p0Index].orientation_,
                  rotations_[p1Index].orientation_, scaleFactor);
   finalRotation = glm::normalize(finalRotation);
-  return glm::toMat4(finalRotation);
+  return finalRotation;
+  // return glm::toMat4(finalRotation);
 }
 
-glm::mat4 GEngine::Bone::InterpolateScaling(float animationTime) {
+glm::vec3 GEngine::Bone::InterpolateScaling(float animationTime) {
   if (num_scalings_ == 1)
-    return glm::scale(glm::mat4(1.0f), scales_[0].scale_);
+    return scales_[0].scale_;
 
   int p0Index = GetScaleIndex(animationTime);
   int p1Index = p0Index + 1;
@@ -132,7 +133,8 @@ glm::mat4 GEngine::Bone::InterpolateScaling(float animationTime) {
                      animationTime);
   glm::vec3 finalScale =
       glm::mix(scales_[p0Index].scale_, scales_[p1Index].scale_, scaleFactor);
-  return glm::scale(glm::mat4(1.0f), finalScale);
+  return finalScale;
+  // return glm::scale(glm::mat4(1.0f), finalScale);
 }
 
 /* Animation */
@@ -217,6 +219,9 @@ void GEngine::CAnimation::ReadHeirarchyData(std::shared_ptr<SAssimpNodeData>& de
 GEngine::CAnimator::CAnimator(std::shared_ptr<CAnimation> animation) {
 
   current_time_ = 0.0f;
+  from_current_time_ = 0.0f;
+  to_current_time_ = 0.0f;
+
   current_animation_ = animation;
   final_bone_matrices_.reserve(MAX_TOTAL_BONE);
 
@@ -226,9 +231,34 @@ GEngine::CAnimator::CAnimator(std::shared_ptr<CAnimation> animation) {
 
 void GEngine::CAnimator::UpdateAnimation(float dt) {
   delta_time_ = dt;
-  if (current_animation_) {
-    current_time_ += current_animation_->GetTicksPerSecond() * dt;
-    current_time_ = fmod(current_time_, current_animation_->GetDuration());
+  if (!current_animation_) {
+    GE_CORE_ERROR("No animation!");
+    return;
+  }
+
+  current_time_ += current_animation_->GetTicksPerSecond() * dt;
+  current_time_ = fmod(current_time_, current_animation_->GetDuration());
+
+  if(playing_blended_animation_) {
+    animation_blend_current_time_ += current_animation_->GetTicksPerSecond() * dt;
+    animation_blend_factor_ = animation_blend_current_time_ / blended_animation_total_time_;
+    if(animation_blend_factor_ >= 1.0) {
+        playing_blended_animation_ = false;
+        animation_blend_current_time_ = 0.0f;
+        animation_blend_factor_ = 0.0f;
+        from_current_time_ = 0.0f;
+        to_current_time_ = 0.0f;
+        current_animation_  = to_animation_;
+    }
+    else {
+      from_current_time_ += from_animation_->GetTicksPerSecond() * dt;
+      from_current_time_  = fmod(from_current_time_, from_animation_->GetDuration());
+      to_current_time_   += to_animation_->GetTicksPerSecond() * dt;
+      to_current_time_    = fmod(to_current_time_, to_animation_->GetDuration());
+      CalculateBlendedBoneTransform(from_animation_->GetRootNode(), to_animation_->GetRootNode(), glm::mat4(1.0f));
+    }
+  }
+  else {
     CalculateBoneTransform(current_animation_->GetRootNode(), glm::mat4(1.0f));
   }
 }
@@ -236,6 +266,29 @@ void GEngine::CAnimator::UpdateAnimation(float dt) {
 void GEngine::CAnimator::PlayAnimation(std::shared_ptr<CAnimation> animation) {
   current_animation_ = animation;
   current_time_ = 0.0f;
+}
+
+void GEngine::CAnimator::PlayBlendedAnimation(std::shared_ptr<CAnimation> from_animation, std::shared_ptr<CAnimation> to_animation) {
+  playing_blended_animation_ = true;
+  current_animation_ = from_animation;
+
+  from_animation_ = from_animation;
+  to_animation_ = to_animation;
+
+  current_time_ = 0.0f;
+  from_current_time_ = 0.0f;
+  to_current_time_ = 0.0f;
+}
+
+std::shared_ptr<GEngine::Bone> GEngine::CAnimation::FindBone(const std::string& name) {
+  auto iter = std::find_if(bones_.begin(), bones_.end(), [&](auto bone_ptr) {
+        return bone_ptr->GetBoneName() == name;
+      });
+
+  if (iter == bones_.end())
+    return nullptr;
+  else
+    return *iter;
 }
 
 void GEngine::CAnimator::CalculateBoneTransform(std::shared_ptr<SAssimpNodeData> node,
@@ -262,3 +315,61 @@ void GEngine::CAnimator::CalculateBoneTransform(std::shared_ptr<SAssimpNodeData>
   for (int i = 0; i < node->children_count_; i++)
     CalculateBoneTransform(node->children_[i], globalTransformation);
 }
+
+void GEngine::CAnimator::CalculateBlendedBoneTransform(std::shared_ptr<SAssimpNodeData> from_node, std::shared_ptr<SAssimpNodeData> to_node, glm::mat4 parentTransform) {
+  std::string nodeName = from_node->name_;
+  glm::mat4 nodeTransform = from_node->transformation_;
+
+  auto from_animation_bone = from_animation_->FindBone(nodeName);
+  auto to_animation_bone = to_animation_->FindBone(nodeName);
+
+  if (from_animation_bone && to_animation_bone) {
+    // trouble maker
+    nodeTransform = GetBlendedLocalTransform(from_animation_bone, to_animation_bone, from_current_time_, to_current_time_);
+  }
+  else if(from_animation_bone==nullptr && to_animation_bone==nullptr){
+    // do nothing
+  } else {
+    GE_CORE_ERROR("Blended animation failed");
+  }
+
+  // nodeTransform is the blended transform
+  glm::mat4 globalTransformation = parentTransform * nodeTransform;
+
+  auto boneInfoMap = from_animation_->GetBoneIDMap();
+  if (boneInfoMap.find(nodeName) != boneInfoMap.end()) {
+    int index = boneInfoMap[nodeName]->id;
+    glm::mat4 inverse_bind_transform = boneInfoMap[nodeName]->inverse_bind_transform;
+    final_bone_matrices_[index] = globalTransformation * inverse_bind_transform;
+  }
+
+  for (int i = 0; i < from_node->children_count_; i++)
+    CalculateBlendedBoneTransform(from_node->children_[i], to_node->children_[i], globalTransformation);
+
+}
+
+glm::mat4 GEngine::CAnimator::GetBlendedLocalTransform(
+    std::shared_ptr<GEngine::Bone> from_bone,
+    std::shared_ptr<GEngine::Bone> to_bone, float from_current_time, float to_current_time) {
+      glm::vec3 from_bone_translation = from_bone->InterpolatePosition(from_current_time);
+      glm::quat from_bone_rotation = from_bone->InterpolateRotation(from_current_time);
+      glm::vec3 from_bone_scale = from_bone->InterpolateScaling(from_current_time);
+
+      glm::vec3 to_bone_translation = to_bone->InterpolatePosition(to_current_time);
+      glm::quat to_bone_rotation = to_bone->InterpolateRotation(to_current_time);
+      glm::vec3 to_bone_scale = to_bone->InterpolateScaling(to_current_time);
+
+      assert(animation_blend_factor_>=0.0 && animation_blend_factor_ <= 1.0f);
+      
+      auto translation = glm::mix(from_bone_translation, to_bone_translation, animation_blend_factor_);
+      auto rotation = glm::slerp(from_bone_rotation, to_bone_rotation, animation_blend_factor_);
+      auto scale = glm::mix(from_bone_scale, to_bone_scale, animation_blend_factor_);
+
+      glm::mat4 local_transform = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
+      return local_transform;
+
+      // glm::mat4 translation = glm::translate(glm::mat4(1.0f), from_bone->InterpolatePosition(from_current_time));
+      // glm::mat4 rotation = glm::toMat4(from_bone->InterpolateRotation(from_current_time));
+      // glm::mat4 scale = glm::scale(glm::mat4(1.0f), from_bone->InterpolateScaling(from_current_time));
+      // return translation * rotation * scale;
+    }

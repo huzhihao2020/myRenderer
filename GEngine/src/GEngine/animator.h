@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "GEngine/mesh.h"
+#include "glm/fwd.hpp"
 
 namespace GEngine {
 
@@ -48,6 +49,11 @@ class Bone {
   int GetPositionIndex(float animationTime);
   int GetRotationIndex(float animationTime);
 
+  /* figures out which position keys to interpolate b/w and performs the interpolation and returns the translation matrix */
+  glm::vec3 InterpolatePosition(float animationTime);
+  glm::quat InterpolateRotation(float animationTime);
+  glm::vec3 InterpolateScaling(float animationTime);
+
 private:
   std::vector<SKeyPosition> positions_;
   std::vector<SKeyRotation> rotations_;
@@ -63,10 +69,6 @@ private:
   /* Gets normalized value for Lerp & Slerp */
   float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime);
 
-  /* figures out which position keys to interpolate b/w and performs the interpolation and returns the translation matrix */
-  glm::mat4 InterpolatePosition(float animationTime);
-  glm::mat4 InterpolateRotation(float animationTime);
-  glm::mat4 InterpolateScaling(float animationTime);
 };
 
 struct SAssimpNodeData
@@ -89,16 +91,7 @@ class CAnimation {
     inline const std::shared_ptr<SAssimpNodeData>& GetRootNode() { return root_node_; }
     inline const std::map<std::string, std::shared_ptr<SBoneInfo>>& GetBoneIDMap() { return bone_info_; }
 
-    std::shared_ptr<Bone> FindBone(const std::string &name) {
-      auto iter = std::find_if(bones_.begin(), bones_.end(), [&](auto bone_ptr) {
-            return bone_ptr->GetBoneName() == name;
-          });
-
-      if (iter == bones_.end())
-        return nullptr;
-      else
-        return *iter;
-    }
+    std::shared_ptr<Bone> FindBone(const std::string &name);
 
   private:
     void ReadMissingBones(const aiAnimation *animation, std::shared_ptr<CMesh> &mesh);
@@ -122,12 +115,25 @@ class CAnimator {
   std::vector<glm::mat4> GetFinalBoneMatrices() { return final_bone_matrices_; }
   void PlayAnimation(std::shared_ptr<CAnimation> animation);
   void CalculateBoneTransform(std::shared_ptr<SAssimpNodeData> node, glm::mat4 parent_transform);
+  void PlayBlendedAnimation(std::shared_ptr<CAnimation> from_animation, std::shared_ptr<CAnimation> to_animation);
+  void CalculateBlendedBoneTransform(std::shared_ptr<SAssimpNodeData> from_node, std::shared_ptr<SAssimpNodeData> to_node, glm::mat4 parentTransform);
+  glm::mat4 GetBlendedLocalTransform(std::shared_ptr<GEngine::Bone> from_bone, std::shared_ptr<GEngine::Bone> to_bone, float from_current_time, float to_current_time);
 
 private:
   std::vector<glm::mat4> final_bone_matrices_;
   std::shared_ptr<CAnimation> current_animation_;
   float current_time_;
   float delta_time_;
+
+  // blended animation
+  float blended_animation_total_time_ = 1800.0f;
+  float animation_blend_current_time_ = 0.0f;
+  bool playing_blended_animation_ = false;
+  std::shared_ptr<CAnimation> from_animation_;
+  std::shared_ptr<CAnimation> to_animation_;
+  float animation_blend_factor_ = 0.0f;
+  float from_current_time_ = 0.0f;
+  float to_current_time_ = 0.0f;
 };
 
 } // namespace GEngine

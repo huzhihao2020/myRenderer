@@ -261,20 +261,17 @@ GLvoid GEngine::CApp::RunMainLoop() {
 
     if(render_model_animation) {
       int animation_index = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->GetAnimaiton();
-      
+      // todo: fix animation blending
       if(animation_index != prev_animation_index) {
-        animator.PlayAnimation(animations[animation_index]);
+        // animator.PlayAnimation(animations[animation_index]);
+        animator.PlayBlendedAnimation(animations[prev_animation_index], animations[animation_index]);
         prev_animation_index = animation_index;
       }
-      
       animator.UpdateAnimation(deltaTime_);
       model_shader->Use();
       model_shader->SetMat4("projection_view_model", projection_view_model);
       auto transforms = animator.GetFinalBoneMatrices();
-      // std::cout << "=========================================================" << '\n';
       for (int i = 0; i < transforms.size(); ++i) {
-        // std::cout << i << '\n';
-        // std::cout << glm::to_string(transforms[i]) << std::endl;
         model_shader->SetMat4("u_final_bones_matrices[" + std::to_string(i) + "]", transforms[i]);
       }
             

@@ -28,6 +28,14 @@ The `.xcodeproj` file will be written to `build/`
 
 ![GEngine .glTF model image](images/GEngine-glTF-PBR-debug.jpeg)
 
+* Skeletal Animation
+
+![GEngine Skeletal Animation ](images/mascot-animation.gif)
+
+* Animation Blending
+
+![GEngine Skeletal Animation ](images/blend-animation.gif)
+
 ## Files
 
 * GEngine
