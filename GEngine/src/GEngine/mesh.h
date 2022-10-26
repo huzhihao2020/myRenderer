@@ -11,6 +11,12 @@
 #include <vector>
 
 namespace GEngine {
+
+struct SBoneInfo {
+  int id;
+  glm::mat4 inverse_bind_transform;
+};
+
 class CMesh {
 public:
   // for Structure of Arrays
@@ -20,6 +26,8 @@ public:
     NORMAL,
     TEXCOORD,
     TANGENT,
+    BONE_ID,
+    WEIGHTS,
     // MVP_MAT & WORLD_MAT is only for instancing
     // MVP_MAT,
     // WORLD_MAT,
@@ -51,6 +59,10 @@ public:
   void Render(std::shared_ptr<GEngine::CShader> shader);
   void Clear();
 
+  // bone info getter
+  std::map<std::string, std::shared_ptr<SBoneInfo>>& GetBoneInfoMap() { return bone_info_; }
+  int& GetBoneCount() { return bone_counter_; }
+
   // mesh data (new)
   std::vector<SMeshEntry> meshes_;
   std::vector<std::shared_ptr<CMaterial>> materials_;
@@ -60,7 +72,6 @@ public:
 
 private:
   unsigned int buffers_[NUM_BUFFERS] = {0};
-  void SetupMesh();
   
   bool InitFromScene(const aiScene* scene, const std::string &filename);
 
@@ -79,7 +90,15 @@ private:
   std::vector<glm::vec3> normals_;
   std::vector<glm::vec2> texcoords_;
   std::vector<glm::vec3> tangents_;
+  std::vector<glm::ivec4> bone_ids_;
+  std::vector<glm::vec4>  weights_;
   std::vector<unsigned int> indices_;
+
+  int num_faces_ = 0;
+
+  // bool has_animation_ = false;
+  int bone_counter_ = 0;
+  std::map<std::string, std::shared_ptr<SBoneInfo>> bone_info_;
 };
 
 } // namespace GEngine

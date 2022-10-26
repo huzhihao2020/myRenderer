@@ -11,8 +11,15 @@ class CMaterial {
     Principled_BSDF,
   };
 
+  struct SMaterialDesc {
+    // todo 
+    bool has_base_color = false;
+    bool has_base_color_texture = false;
+  };
+
 public:
   MATERIAL_TYPE material_type_ = MATERIAL_TYPE::PBR_MetallicRoughness;
+  SMaterialDesc mat_desc_;
 
   //Common
   std::shared_ptr<CTexture> diffuse_texture_ = nullptr;

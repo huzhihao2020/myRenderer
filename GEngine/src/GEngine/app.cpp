@@ -8,7 +8,11 @@
 #include "GEngine/log.h"
 #include "GEngine/mesh.h"
 #include "GEngine/texture.h"
+#include "glm/ext/matrix_transform.hpp"
 #include "singleton.h"
+#include "GEngine/animator.h"
+
+#include <glm/gtx/string_cast.hpp>
 
 GEngine::CApp::CApp()
 {
@@ -46,11 +50,14 @@ GLvoid GEngine::CApp::RunMainLoop() {
                                                            std::string("../../shaders/sponza_PBR_FS_debug.glsl"));
   auto light_shader = std::make_shared<CShader>(std::string("../../shaders/light_sphere_VS.glsl"),
                                                 std::string("../../shaders/light_sphere_FS.glsl"));
+  auto model_shader =std::make_shared<CShader>(std::string("../../shaders/model_VS.glsl"),
+                                               std::string("../../shaders/model_FS.glsl"));
 
   bool render_light        = 0;
   bool render_sponza_phong = 0;
-  bool render_sponza_pbr   = 1;
+  bool render_sponza_pbr   = 0;
   bool render_pbr_sphere   = 0;
+  bool render_model_animation = 1;
 
   // texture
   if(render_light) {
@@ -63,11 +70,30 @@ GLvoid GEngine::CApp::RunMainLoop() {
   // std::string model_path("../../assets/model/glTF/DamagedHelmet.gltf");
   // std::string model_path("../../assets/model/backpack/backpack.obj");
   // std::string model_path("../../assets/model/Lucy/Lucy.obj"); // Large model
+
+  // animation, fixme
+  // std::string model_path("../../assets/model/glTF/BrainStem.gltf");
+  // std::string model_path("../../assets/model/glTF/mascot.glb");
+  std::string model_path("../../assets/model/glTF/mascot/scene.gltf");
+  // std::string model_path("../../assets/model/vampire/dancing_vampire.dae");
+  auto mesh_model_animation = std::make_shared<GEngine::CMesh>();
+  mesh_model_animation->LoadMesh(model_path);
+  auto animation0 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 0);
+  auto animation1 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 1);
+  auto animation2 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 2);
+  auto animation3 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 3);
+  std::vector<std::shared_ptr<CAnimation>> animations = {animation0, animation1, animation2, animation3};
+  
+  CAnimator animator(animation0);
+  int prev_animation_index = 0;
+
   auto mesh_sponza = std::make_shared<GEngine::CMesh>();
-  if(render_sponza_phong) {
-    mesh_sponza->LoadMesh(std::string("../../assets/model/sponza/Scale300Sponza.obj"));
-  } else if(render_sponza_pbr) {
-    mesh_sponza->LoadMesh(std::string("../../assets/model/sponza-gltf-pbr/sponza.glb"));
+  if(render_sponza_phong || render_sponza_pbr){
+    if(render_sponza_phong) {
+      mesh_sponza->LoadMesh(std::string("../../assets/model/sponza/Scale300Sponza.obj"));
+    } else if(render_sponza_pbr) {
+      mesh_sponza->LoadMesh(std::string("../../assets/model/sponza-gltf-pbr/sponza.glb"));
+    }
   }
 
   // sphere_pbr_ibl
@@ -101,6 +127,9 @@ GLvoid GEngine::CApp::RunMainLoop() {
     pbr_shader->SetTexture(std::string("brdf_lut"), ibl_brdf_lut);
   }
 
+  // draw in wireframe
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
   // render loop
   while (!glfwWindowShouldClose(window_)) {
     auto err = glGetError();
@@ -124,6 +153,8 @@ GLvoid GEngine::CApp::RunMainLoop() {
     }
     // render the objects
     glm::mat4 model = glm::mat4(1.0f);
+    // model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
+    model = glm::scale(model, glm::vec3(0.01, 0.01, 0.01));
     glm::mat4 view = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetViewMatrix();
     glm::mat4 projection = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetProjectionMatrix();
     glm::mat4 projection_view_model = projection * view * model;
@@ -228,11 +259,34 @@ GLvoid GEngine::CApp::RunMainLoop() {
       }
     }
 
+    if(render_model_animation) {
+      int animation_index = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->GetAnimaiton();
+      
+      if(animation_index != prev_animation_index) {
+        animator.PlayAnimation(animations[animation_index]);
+        prev_animation_index = animation_index;
+      }
+      
+      animator.UpdateAnimation(deltaTime_);
+      model_shader->Use();
+      model_shader->SetMat4("projection_view_model", projection_view_model);
+      auto transforms = animator.GetFinalBoneMatrices();
+      // std::cout << "=========================================================" << '\n';
+      for (int i = 0; i < transforms.size(); ++i) {
+        // std::cout << i << '\n';
+        // std::cout << glm::to_string(transforms[i]) << std::endl;
+        model_shader->SetMat4("u_final_bones_matrices[" + std::to_string(i) + "]", transforms[i]);
+      }
+            
+      mesh_model_animation->Render(model_shader);
+    }
+
     // ticking main GUI
     CSingleton<CRenderSystem>()->GetOrCreateMainUI()->Tick();
     if(err!=GL_NO_ERROR) {
       GE_WARN("gl Error {0}", err);
     }
+    
     glfwPollEvents();
     glfwSwapBuffers(window_);
   }

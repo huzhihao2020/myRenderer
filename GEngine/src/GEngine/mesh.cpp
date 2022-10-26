@@ -5,15 +5,22 @@
 #include "assimp/GltfMaterial.h"
 #include "assimp/material.h"
 #include "assimp/types.h"
+#include "common.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/vector3.h>
 #include <tuple>
+#include <glm/gtc/type_ptr.hpp>
 
 #define POISITION_LOCATION  0
 #define NORMAL_LOCATION     1
 #define TEX_COORD_LOCATION  2
 #define TANGENT_LOCATION    3
+#define BONE_ID             4
+#define WEIGHTS             5
+
+#define MAX_BONE_INFLUENCE 4
+#define MAX_TOTAL_BONE 200
 
 GEngine::CMesh::CMesh() {}
 
@@ -36,11 +43,11 @@ bool GEngine::CMesh::LoadMesh(const std::string &filename) {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int),&indices_[0], GL_STATIC_DRAW);
 
   Assimp::Importer importer;
-  auto flags = aiProcess_Triangulate | 
-               aiProcess_GenSmoothNormals |
-               aiProcess_FlipUVs | 
-               aiProcess_CalcTangentSpace|
-               aiProcess_JoinIdenticalVertices;
+  auto flags = aiProcess_Triangulate 
+               | aiProcess_GenSmoothNormals
+               | aiProcess_FlipUVs 
+               | aiProcess_CalcTangentSpace
+               | aiProcess_JoinIdenticalVertices;
   const aiScene* ai_scene = importer.ReadFile(filename.c_str(), flags);
   if(ai_scene != nullptr) {
     success = InitFromScene(ai_scene, filename);
@@ -67,6 +74,8 @@ bool GEngine::CMesh::InitFromScene(const aiScene* scene, const std::string &file
   normals_.reserve(total_vertices);
   positions_.reserve(total_vertices);
   texcoords_.reserve(total_vertices);
+  bone_ids_.reserve(total_vertices);
+  weights_.reserve(total_vertices);
   indices_.reserve(total_indices);
 
   // traverse all meshes and init them
@@ -77,25 +86,70 @@ bool GEngine::CMesh::InitFromScene(const aiScene* scene, const std::string &file
     const aiVector3D default_bitangent(1.0f, 0.0f,0.0f);
     auto ai_mesh = scene->mMeshes[i];
     for(int jj=0; jj<ai_mesh->mNumVertices; jj++) {
-      const auto& a_pos = ai_mesh->mVertices[jj];
+      const auto& a_pos = ai_mesh->HasPositions() ? ai_mesh->mVertices[jj] : zero3f;
       const auto& a_normal = ai_mesh->HasNormals() ? ai_mesh->mNormals[jj] : default_normal;
       const auto& a_texcoord = ai_mesh->HasTextureCoords(0) ? ai_mesh->mTextureCoords[0][jj] : zero3f;
       const auto& a_tangent = ai_mesh->HasTangentsAndBitangents() ? ai_mesh->mTangents[jj] : default_tangent;
+      
+      //init bone info for vertices
+      std::vector<int> a_bone_id;
+      std::vector<float> a_bone_weight;
 
       positions_.push_back(glm::vec3(a_pos.x, a_pos.y, a_pos.z));
       normals_.push_back(glm::vec3(a_normal.x, a_normal.y, a_normal.z));
       texcoords_.push_back(glm::vec2(a_texcoord.x, a_texcoord.y));
       tangents_.push_back(glm::vec3(a_tangent.x, a_tangent.y, a_tangent.z));
+      bone_ids_.push_back(glm::ivec4(-1, -1, -1, -1));
+      weights_.push_back(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
     }
+
+    // 遍历bone的信息，用bone_info_[bone_name, {id, inv_binding_matrix}]存起来
+    for (int boneIndex = 0; boneIndex < ai_mesh->mNumBones; ++boneIndex) {
+      int boneID = -1;
+      std::string boneName = ai_mesh->mBones[boneIndex]->mName.C_Str();
+      if(bone_info_.find(boneName)!=bone_info_.end()) {
+        boneID = bone_info_[boneName]->id;
+      }
+      else {
+        auto tmp_bone_info  = std::make_shared<SBoneInfo>();
+        tmp_bone_info->id = bone_counter_;
+        // offset matrix 就是 inverse_bind_transform
+        tmp_bone_info->inverse_bind_transform = GEngine::Utils::ConvertMatrixToGLMFormat(ai_mesh->mBones[boneIndex]->mOffsetMatrix);
+        bone_info_[boneName] = tmp_bone_info;
+        boneID = bone_counter_;
+        bone_counter_++;
+      }
+      assert(boneID != -1);
+      
+      // boneID骨骼影响到了多少顶点
+      auto weights = ai_mesh->mBones[boneIndex]->mWeights;
+      int numWeights = ai_mesh->mBones[boneIndex]->mNumWeights;
+      for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex) {
+        int vertexId = weights[weightIndex].mVertexId + meshes_[i].base_vertex_;
+        float weight = weights[weightIndex].mWeight;
+        assert(vertexId <= total_vertices);
+        //SetVertexBoneData(vertices[vertexId], boneID, weight);
+        for (int k= 0; k < MAX_BONE_INFLUENCE; k++) {
+          if (bone_ids_[vertexId][k] < 0 && weight > 0) {
+            weights_[vertexId][k] = weight;
+            bone_ids_[vertexId][k] = boneID;
+            break;
+          }
+        }
+      }
+    }
+
     for(int kk=0; kk<ai_mesh->mNumFaces; kk++) {
       const auto& face = ai_mesh->mFaces[kk];
       if(face.mNumIndices != 3) {
         GE_ERROR("face indices number is not 3!");
+        assert(0);
       }
       indices_.push_back(face.mIndices[0]);
       indices_.push_back(face.mIndices[1]);
       indices_.push_back(face.mIndices[2]);
     }
+    num_faces_ += ai_mesh->mNumFaces;;
   }
 
   // Parse Materials
@@ -123,6 +177,16 @@ bool GEngine::CMesh::InitFromScene(const aiScene* scene, const std::string &file
   glBufferData(GL_ARRAY_BUFFER, sizeof(tangents_[0]) * tangents_.size(), &tangents_[0], GL_STATIC_DRAW);
   glEnableVertexAttribArray(TANGENT_LOCATION);
   glVertexAttribPointer(TANGENT_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buffers_[BONE_ID]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(bone_ids_[0]) * bone_ids_.size(), &bone_ids_[0], GL_STATIC_DRAW);
+  glEnableVertexAttribArray(BONE_ID);
+  glVertexAttribIPointer(BONE_ID, 4, GL_INT, 0, 0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, buffers_[WEIGHTS]);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(weights_[0]) * weights_.size(), &weights_[0], GL_STATIC_DRAW);
+  glEnableVertexAttribArray(WEIGHTS);
+  glVertexAttribPointer(WEIGHTS, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers_[INDEX_BUFFER]);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_[0]) * indices_.size(), &indices_[0], GL_STATIC_DRAW);
@@ -154,30 +218,38 @@ bool GEngine::CMesh::ParseMaterials(const aiScene *scene, const std::string& fil
                                          : filename.substr(0, slash_pos);
   GE_INFO("Materials num - {0}", scene->mNumMaterials);
 
-  // load textures
-  for (int i = 0; i < scene->mNumMaterials; i++) {
-    const aiMaterial *p_material = scene->mMaterials[i];
+  // load material colors and textures
+  // todo: check embbeded texture / separate texture
+  for (int idx = 0; idx < scene->mNumMaterials; idx++) {
+    const aiMaterial *p_material = scene->mMaterials[idx];
+    aiColor4D color (0.f,0.f,0.f,0.f);
+
+    if(aiGetMaterialColor(p_material, AI_MATKEY_COLOR_DIFFUSE, &color) == AI_SUCCESS) {
+      materials_[idx]->mat_desc_.has_base_color = true;
+      materials_[idx]->basecolor_ = glm::vec3(color.r, color.g, color.b);
+    }
+  
     // diffuse & basecolor texture
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE, materials_[i]->diffuse_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_BASE_COLOR, materials_[i]->basecolor_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_DIFFUSE, materials_[idx]->diffuse_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_BASE_COLOR, materials_[idx]->basecolor_texture_);
     // some models mess up HeightMap and NormalMap
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_HEIGHT, materials_[i]->normal_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_NORMALS, materials_[i]->normal_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_HEIGHT, materials_[idx]->normal_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_NORMALS, materials_[idx]->normal_texture_);
     // maybe the [alpha] channel in diffuse texture
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_OPACITY, materials_[i]->alpha_texture_); 
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_DIFFUSE_ROUGHNESS, materials_[i]->roughness_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_METALNESS, materials_[i]->metallic_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_AMBIENT_OCCLUSION, materials_[i]->ao_texture_);
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_EMISSION_COLOR, materials_[i]->emissive_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_OPACITY, materials_[idx]->alpha_texture_); 
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_DIFFUSE_ROUGHNESS, materials_[idx]->roughness_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_METALNESS, materials_[idx]->metallic_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_AMBIENT_OCCLUSION, materials_[idx]->ao_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_EMISSION_COLOR, materials_[idx]->emissive_texture_);
     // roughness-metallic for glTF format (g,b channel)
-    LoadMaterialTexture(p_material, filedir, i, aiTextureType_UNKNOWN, materials_[i]->unknown_texture_);
+    LoadMaterialTexture(p_material, filedir, idx, aiTextureType_UNKNOWN, materials_[idx]->unknown_texture_);
   }
   return true;
 }
 
 bool GEngine::CMesh::LoadMaterialTexture(const aiMaterial *material,
                                          std::string &filedir,
-                                         int i,
+                                         int material_index,
                                          aiTextureType type,
                                          std::shared_ptr<CTexture>& texture) {
   texture = nullptr;
@@ -197,10 +269,10 @@ bool GEngine::CMesh::LoadMaterialTexture(const aiMaterial *material,
 
       texture = std::make_shared<CTexture>(full_path, CTexture::ETarget::kTexture2D);
       if (!texture) {
-        GE_ERROR("Error loading texture '{0}' at index '{1}'", full_path, i);
+        GE_ERROR("Error loading texture '{0}' at index '{1}'", full_path, material_index);
         return false;
       }
-      GE_INFO("Load texture '{0}' at index '{1}'", full_path, i);
+      GE_INFO("Load texture '{0}' at index '{1}'", full_path, material_index);
     }
   }
   return true;
@@ -211,6 +283,13 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
   glBindVertexArray(VAO_);
   for (int i = 0; i < meshes_.size(); i++) {
     auto material_index = meshes_[i].material_index_;
+
+    // set uniforms
+    if(materials_[material_index]->mat_desc_.has_base_color) {
+      shader->SetVec3("u_diffuse_color", materials_[material_index]->basecolor_);
+    }
+    // todo: set uniforms according to mat_desc_
+
     // common
     shader->SetBool("has_diffuse_texture", false);
     if (materials_[material_index]->diffuse_texture_ != nullptr) {
@@ -253,6 +332,9 @@ void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
     if (materials_[material_index]->unknown_texture_ != nullptr) {
       shader->SetTexture("texture_metallic_roughness", materials_[material_index]->unknown_texture_);
     }
+
+    // set animation uniforms
+
     glEnable(GL_DEPTH_TEST);
     shader->Use();
     glDrawElementsBaseVertex(GL_TRIANGLES,

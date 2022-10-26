@@ -13,7 +13,7 @@ namespace GEngine {
 class CCamera {
 public:
 
-  CCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 20.0f), float fov = 45.0f);
+  CCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 5.0f), float fov = 45.0f);
   ~CCamera();
 
   void Init();

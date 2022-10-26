@@ -69,6 +69,19 @@ void GEngine::CEditorUI::Tick() {
   // ImGui::SliderFloat3("light color", light_color_, 0.0f, 1.0f);
   ImGui::ColorEdit3("Sphere Color", sphere_color_); // color picker
   ImGui::DragFloat4("light (rgbI)", light_color_, 0.001f, 0.0f, 1.0f);
+  // animation
+  if(ImGui::Button("Animaton0")) {
+    animation_ = 0;
+  }
+  if(ImGui::SameLine();ImGui::Button("Animaton1")) {
+    animation_ = 1;
+  }
+  if(ImGui::SameLine();ImGui::Button("Animaton2")) {
+    animation_ = 2;
+  }
+  if(ImGui::SameLine();ImGui::Button("Animaton3")) {
+    animation_ = 3;
+  }
   ImGui::End();
   // imgui end
   ImGui::Render();
