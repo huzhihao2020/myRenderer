@@ -11,8 +11,9 @@ public:
   void Init();
   GLFWwindow *GetGLFWwindow() const;
 
-private:
   void SetViewport();
+  
+private:
 
   GLFWwindow *window_ = nullptr;
 };

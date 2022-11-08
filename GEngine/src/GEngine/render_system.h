@@ -48,7 +48,7 @@ public:
   void RegisterRenderPass(const std::shared_ptr<CRenderPass>& render_pass);
   void RegisterAnyDataWithName(const std::string& name, std::any data);
 
-  std::map<std::string, std::shared_ptr<CTexture>>  texture_center_;
+  std::map<std::string, std::shared_ptr<CTexture>> texture_center_;
 
 private:
   unsigned int cube_VAO_ = 0;

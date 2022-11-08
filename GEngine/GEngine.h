@@ -18,6 +18,7 @@
 
 #include "GEngine/renderpass/IBL_pass.h"
 #include "GEngine/renderpass/skybox_pass.h"
+#include "GEngine/renderpass/precomputed_atmosphere_pass.h"
 
 // todo
 #include "GEngine/light.h"

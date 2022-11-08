@@ -44,5 +44,6 @@ namespace GEngine {
     static inline glm::quat GetGLMQuat(const aiQuaternion &pOrientation) {
       return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
     }
+
   };
 }

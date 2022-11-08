@@ -43,7 +43,7 @@ public:
   ERenderPassType GetType() const { return pass_type_; }
   void SetType (ERenderPassType type) { pass_type_ = type; }
 
-  std::shared_ptr<CShader> shader_;
+  std::shared_ptr<Shader> shader_;
 
 private:
   std::string pass_name_;

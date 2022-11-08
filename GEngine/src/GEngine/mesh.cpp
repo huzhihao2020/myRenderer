@@ -40,7 +40,7 @@ bool GEngine::CMesh::LoadMesh(const std::string &filename) {
   // EBO
   glGenBuffers(1, &EBO_);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int),&indices_[0], GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int), &indices_[0], GL_STATIC_DRAW);
 
   Assimp::Importer importer;
   auto flags = aiProcess_Triangulate 
@@ -279,7 +279,7 @@ bool GEngine::CMesh::LoadMaterialTexture(const aiMaterial *material,
 }
 
 // suppose our mesh contains at most 1 texture 
-void GEngine::CMesh::Render(std::shared_ptr<GEngine::CShader> shader) {
+void GEngine::CMesh::Render(std::shared_ptr<GEngine::Shader> shader) {
   glBindVertexArray(VAO_);
   for (int i = 0; i < meshes_.size(); i++) {
     auto material_index = meshes_[i].material_index_;

@@ -4,6 +4,7 @@
 #include "GEngine/shader.h"
 #include "GEngine/singleton.h"
 #include "GEngine/texture.h"
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <memory>
@@ -35,7 +36,7 @@ void GEngine::CSkyboxPass::Init() {
 
   std::string v_path("../../GEngine/src/GEngine/renderpass/skybox_shader_vert.glsl");
   std::string f_path("../../GEngine/src/GEngine/renderpass/skybox_shader_frag.glsl");
-  shader_ = std::make_shared<GEngine::CShader>(v_path, f_path);
+  shader_ = std::make_shared<GEngine::Shader>(v_path, f_path);
 
   auto skybox_texture = std::make_shared<GEngine::CTexture>(GEngine::CTexture::ETarget::kTextureCubeMap);
   skybox_texture->SetMinFilter(GEngine::CTexture::EMinFilter::kLinearMipmapLinear);

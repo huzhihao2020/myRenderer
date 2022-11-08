@@ -1,6 +1,7 @@
 #include "GEngine/renderpass/IBL_pass.h"
 #include "GEngine/singleton.h"
 #include "GEngine/render_system.h"
+#define GLFW_INCLUDE_NONE
 #include "GLFW/glfw3.h"
 #include "glm/fwd.hpp"
 #include "log.h"
@@ -100,7 +101,7 @@ void GEngine::CIBLPass::GenerateIrradianceMap(std::shared_ptr<GEngine::CTexture>
   };
   std::string v_path("../../GEngine/src/GEngine/renderpass/ibl_irradiance_vert.glsl");
   std::string f_path("../../GEngine/src/GEngine/renderpass/ibl_irradiance_frag.glsl");
-  shader_ = std::make_shared<CShader>(v_path, f_path);
+  shader_ = std::make_shared<Shader>(v_path, f_path);
   shader_->SetTexture("cubemap_texture", skybox_texture);
   // render irradiance map to off-screen framebuffer
   shader_->Use();
@@ -157,7 +158,7 @@ void GEngine::CIBLPass::GeneratePrefilteredMap(std::shared_ptr<GEngine::CTexture
   // render to cubemap texture
   std::string v_path("../../GEngine/src/GEngine/renderpass/ibl_irradiance_vert.glsl");
   std::string f_path("../../GEngine/src/GEngine/renderpass/ibl_prefiltered_frag.glsl");
-  shader_ = std::make_shared<CShader>(v_path, f_path);
+  shader_ = std::make_shared<Shader>(v_path, f_path);
 
   glm::mat4 capture_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
   glm::mat4 capture_views[] = {

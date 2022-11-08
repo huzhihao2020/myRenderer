@@ -24,11 +24,13 @@ GEngine::CApp::~CApp()
 
 GLvoid GEngine::CApp::Init()
 {
+  
   GEngine::CLog::Init();
   CSingleton<CRenderSystem>()->GetOrCreateWindow()->Init();
   window_ = CSingleton<CRenderSystem>()->GetOrCreateWindow()->GetGLFWwindow();
   CSingleton<CInputSystem>()->Init(); 
   CSingleton<CRenderSystem>()->Init();
+
   // renderpass init
   auto passes = CSingleton<CRenderSystem>()->GetRenderPass();
   for (int i = 0; i < passes.size(); i++) {
@@ -37,104 +39,18 @@ GLvoid GEngine::CApp::Init()
 }
 
 GLvoid GEngine::CApp::RunMainLoop() {
-  glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-  auto basic_shader  = std::make_shared<CShader>(std::string("../../shaders/vert.glsl"),
-                                                 std::string("../../shaders/frag.glsl"));
-  auto pbr_shader = std::make_shared<CShader>(std::string("../../shaders/PBR_MR_VS.glsl"),
-                                              std::string("../../shaders/PBR_MR_FS.glsl"));
-  auto sponza_obj_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_VS.glsl"), 
-                                                 std::string("../../shaders/sponza_FS.glsl"));
-  auto sponza_pbr_shader = std::make_shared<CShader>(std::string("../../shaders/sponza_PBR_VS.glsl"),
-                                                     std::string("../../shaders/sponza_PBR_FS.glsl"));
-  auto sponza_pbr_shader_debug = std::make_shared<CShader>(std::string("../../shaders/sponza_PBR_VS_debug.glsl"),
-                                                           std::string("../../shaders/sponza_PBR_FS_debug.glsl"));
-  auto light_shader = std::make_shared<CShader>(std::string("../../shaders/light_sphere_VS.glsl"),
-                                                std::string("../../shaders/light_sphere_FS.glsl"));
-  auto model_shader =std::make_shared<CShader>(std::string("../../shaders/model_VS.glsl"),
-                                               std::string("../../shaders/model_FS.glsl"));
-
-  bool render_light        = 0;
-  bool render_sponza_phong = 0;
-  bool render_sponza_pbr   = 0;
-  bool render_pbr_sphere   = 0;
-  bool render_model_animation = 1;
-
-  // texture
-  if(render_light) {
-    std::string texture_path = "../../assets/textures/marble.jpg";
-    auto marble_texture = std::make_shared<CTexture>(texture_path); 
-    basic_shader->SetTexture("diffuse_marble", marble_texture);
-  }
-
-  // mesh
-  // std::string model_path("../../assets/model/glTF/DamagedHelmet.gltf");
-  // std::string model_path("../../assets/model/backpack/backpack.obj");
-  // std::string model_path("../../assets/model/Lucy/Lucy.obj"); // Large model
-
-  // animation, fixme
-  // std::string model_path("../../assets/model/glTF/BrainStem.gltf");
-  // std::string model_path("../../assets/model/glTF/mascot.glb");
-  std::string model_path("../../assets/model/glTF/mascot/scene.gltf");
-  // std::string model_path("../../assets/model/vampire/dancing_vampire.dae");
-  auto mesh_model_animation = std::make_shared<GEngine::CMesh>();
-  mesh_model_animation->LoadMesh(model_path);
-  auto animation0 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 0);
-  auto animation1 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 1);
-  auto animation2 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 2);
-  auto animation3 = std::make_shared<CAnimation>(model_path, mesh_model_animation, 3);
-  std::vector<std::shared_ptr<CAnimation>> animations = {animation0, animation1, animation2, animation3};
-  
-  CAnimator animator(animation0);
-  int prev_animation_index = 0;
-
-  auto mesh_sponza = std::make_shared<GEngine::CMesh>();
-  if(render_sponza_phong || render_sponza_pbr){
-    if(render_sponza_phong) {
-      mesh_sponza->LoadMesh(std::string("../../assets/model/sponza/Scale300Sponza.obj"));
-    } else if(render_sponza_pbr) {
-      mesh_sponza->LoadMesh(std::string("../../assets/model/sponza-gltf-pbr/sponza.glb"));
-    }
-  }
-
-  // sphere_pbr_ibl
-  // auto ibl_irradiance_data = CSingleton<CRenderSystem>()->GetAnyDataByName("irradiance_cubemap");
-  // auto ibl_irradiance_texture = std::any_cast<std::shared_ptr<CTexture>>(ibl_irradiance_data);
-
-  if (render_pbr_sphere) {
-      // Load brdf_lut
-    std::string lut_path = std::string("../../assets/textures/IBL/ibl_brdf_lut.png");
-    auto sampler = std::make_shared<CSampler>(
-      CSampler::EMinFilter::kLinear, CSampler::EMagFilter::kLinear,
-      CSampler::EWrapMode::kClampToEdge, CSampler::EWrapMode::kClampToEdge);
-
-    auto ibl_irradiance_texture = CSingleton<CRenderSystem>()->texture_center_["irradiance_texture"];
-    auto ibl_prefiltered_texture = CSingleton<CRenderSystem>()->texture_center_["prefiltered_texture"];
-    auto ibl_brdf_lut = std::make_shared<CTexture>(lut_path, CTexture::ETarget::kTexture2D, true, sampler);
-    // auto ibl_brdf_lut = CSingleton<CRenderSystem>()->texture_center_["ibl_brdf_lut"];
-
-    if (!ibl_irradiance_texture) {
-      GE_WARN("ibl_irradiance_texture not exists!");
-    }
-    if (!ibl_prefiltered_texture) {
-      GE_WARN("ibl_prefiltered_texture not exists!");
-    }
-    if (!ibl_brdf_lut) {
-      GE_WARN("ibl_brdf_lut not exists!");
-    }
-
-    pbr_shader->SetTexture(std::string("prefilter_cubemap"), ibl_prefiltered_texture);
-    pbr_shader->SetTexture(std::string("irradiance_cubemap"), ibl_irradiance_texture);
-    pbr_shader->SetTexture(std::string("brdf_lut"), ibl_brdf_lut);
-  }
 
   // draw in wireframe
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   // render loop
   while (!glfwWindowShouldClose(window_)) {
-    auto err = glGetError();
+    // fixme
+    CSingleton<CRenderSystem>()->GetOrCreateWindow()->SetViewport();
+    
     CalculateTime();
     CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->Tick();
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // ticking the render passes
     auto render_passes = CSingleton<CRenderSystem>()->GetRenderPass();
@@ -151,6 +67,8 @@ GLvoid GEngine::CApp::RunMainLoop() {
         break;
       }
     }
+    
+
     // render the objects
     glm::mat4 model = glm::mat4(1.0f);
     // model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
@@ -158,131 +76,16 @@ GLvoid GEngine::CApp::RunMainLoop() {
     glm::mat4 view = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetViewMatrix();
     glm::mat4 projection = CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetProjectionMatrix();
     glm::mat4 projection_view_model = projection * view * model;
-    if(render_light) {
-      basic_shader->Use();
-      basic_shader->SetMat4("projection_view_model", projection_view_model);
-      CSingleton<CRenderSystem>()->RenderSphere(); // render sphere
-    }   
-    // render model
-    if (render_sponza_phong) {
-      sponza_obj_shader->Use();
-      model = glm::mat4(1.0f);
-      // model = glm::scale(model, glm::vec3(10.0, 10.0, 10.0)); 
-      model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
-      sponza_obj_shader->SetMat4("u_model", model);
-      sponza_obj_shader->SetMat4("u_view", view);
-      sponza_obj_shader->SetMat4("u_projection", projection);
-      mesh_sponza->Render(sponza_obj_shader); // render model]
-    } else if (render_sponza_pbr) {
-      auto sponza_shader = sponza_pbr_shader;
 
-      if(CSingleton<CRenderSystem>()->GetOrCreateMainUI()->test_button_status_) {
-        sponza_shader = sponza_pbr_shader_debug;
-      }
-      int window_size[2];
-      glfwGetWindowSize(window_, &window_size[0], &window_size[1]);
-      sponza_shader->Use();
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, glm::vec3(0.0, -50.0, 0.0));
-      model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
-      sponza_shader->SetMat4("u_model", model);
-      sponza_shader->SetMat4("u_view", view);
-      sponza_shader->SetMat4("u_projection", projection);
-      sponza_shader->SetVec3("u_basecolor", glm::vec3(0.5, 0.0, 0.0));
-      sponza_shader->SetFloat("u_metallic", 0.5);
-      sponza_shader->SetFloat("u_roughness", 0.5);
-      sponza_shader->SetVec2("u_viewport_size", glm::vec2(window_size[0], window_size[1]));
-      mesh_sponza->Render(sponza_shader);
-    }
-
-    if(render_pbr_sphere) {
-      float x = 7.5f;
-      std::vector<glm::vec3> lights_pos = {
-          glm::vec3(-x,  x, 10.0),
-          glm::vec3(-x, -x, 10.0),
-          glm::vec3( x,  x, 10.0),
-          glm::vec3( x, -x, 10.0)
-      };
-
-      // lights Color With Intensity
-      auto lights_c3_r1 = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->GetLightInputs();
-      std::vector<glm::vec3> lights_color(4, {lights_c3_r1[0], lights_c3_r1[1], lights_c3_r1[2]});
-      double intensity = 500 * lights_c3_r1[3];
-      double lights_intensity[4] = {intensity, intensity, intensity, intensity};
-      // {
-      //     glm::vec3(0.7, 0.7, 0.7), glm::vec3(0.7, 0.7, 0.7),
-      //     glm::vec3(0.7, 0.7, 0.7), glm::vec3(0.7, 0.7, 0.7)
-      // };
-
-      auto sphereColor = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->GetColorPickerSphere();
-      glm::vec3 sphere_color({sphereColor[0], sphereColor[1], sphereColor[2]});
-
-      pbr_shader->Use();
-      pbr_shader->SetVec3("u_view_pos", CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->GetPosition());
-      pbr_shader->SetMat4("u_view", view);
-      pbr_shader->SetMat4("u_projection", projection);
-      pbr_shader->SetVec3("u_light0_pos", lights_pos[0]);
-      pbr_shader->SetVec3("u_light1_pos", lights_pos[1]);
-      pbr_shader->SetVec3("u_light2_pos", lights_pos[2]);
-      pbr_shader->SetVec3("u_light3_pos", lights_pos[3]);
-      pbr_shader->SetVec3("u_light0_color", lights_color[0]);
-      pbr_shader->SetVec3("u_light1_color", lights_color[1]);
-      pbr_shader->SetVec3("u_light2_color", lights_color[2]);
-      pbr_shader->SetVec3("u_light3_color", lights_color[3]);
-      pbr_shader->SetFloat("u_light0_intensity", lights_intensity[0]);
-      pbr_shader->SetFloat("u_light1_intensity", lights_intensity[1]);
-      pbr_shader->SetFloat("u_light2_intensity", lights_intensity[2]);
-      pbr_shader->SetFloat("u_light3_intensity", lights_intensity[3]);
-      int nrRows = 7;
-      int nrColumns = 7;
-      float spacing = 2.5;
-      pbr_shader->SetVec3("u_basecolor", sphere_color);
-      for (int row = 0; row < nrRows; ++row) {
-        pbr_shader->SetFloat("u_metallic", (float)row / (float)nrRows);
-        for (int col = 0; col < nrColumns; ++col) {
-          pbr_shader->SetFloat("u_roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
-          model = glm::mat4(1.0f);
-          model = glm::translate(model, glm::vec3((float)(col - (nrColumns / 2)) * spacing, (float)(row - (nrRows / 2)) * spacing, 0.0f));
-          pbr_shader->SetMat4("u_model", model);
-          CSingleton<CRenderSystem>()->RenderSphere();
-        }
-      }
-      light_shader->Use();
-      light_shader->SetMat4("u_view", view);
-      light_shader->SetMat4("u_projection", projection);
-      for(int i=0; i<4; i++) {
-          model = glm::mat4(1.0f);
-          model = glm::translate(model, lights_pos[i]);
-          model = glm::scale(model, glm::vec3(0.5f));
-          light_shader->SetMat4("u_model", model);
-          CSingleton<CRenderSystem>()->RenderSphere();
-      }
-    }
-
-    if(render_model_animation) {
-      int animation_index = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->GetAnimaiton();
-      // todo: fix animation blending
-      if(animation_index != prev_animation_index) {
-        // animator.PlayAnimation(animations[animation_index]);
-        animator.PlayBlendedAnimation(animations[prev_animation_index], animations[animation_index]);
-        prev_animation_index = animation_index;
-      }
-      animator.UpdateAnimation(deltaTime_);
-      model_shader->Use();
-      model_shader->SetMat4("projection_view_model", projection_view_model);
-      auto transforms = animator.GetFinalBoneMatrices();
-      for (int i = 0; i < transforms.size(); ++i) {
-        model_shader->SetMat4("u_final_bones_matrices[" + std::to_string(i) + "]", transforms[i]);
-      }
-            
-      mesh_model_animation->Render(model_shader);
-    }
 
     // ticking main GUI
     CSingleton<CRenderSystem>()->GetOrCreateMainUI()->Tick();
+    
+    auto err = glGetError();
     if(err!=GL_NO_ERROR) {
       GE_WARN("gl Error {0}", err);
     }
+
     
     glfwPollEvents();
     glfwSwapBuffers(window_);

@@ -56,7 +56,7 @@ public:
   ~CMesh();
   
   bool LoadMesh(const std::string &filename);
-  void Render(std::shared_ptr<GEngine::CShader> shader);
+  void Render(std::shared_ptr<GEngine::Shader> shader);
   void Clear();
 
   // bone info getter

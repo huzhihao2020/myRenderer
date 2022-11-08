@@ -20,6 +20,10 @@ public:
   const float* GetColorPickerSphere() const { return sphere_color_;};
   const int GetAnimaiton() const { return animation_; }
 
+  float distance_ = 9000.0f;
+  float view_angle_[2] = {1.39f, 0.0f};
+  float sun_angle_[2] = {1.2, 0.7};
+  
 private:
   float sphere_color_[4] = {0.7f, 0.05f, 0.05f, 1.0f};  
   float light_color_[4] = {0.7f, 0.7f, 0.7f, 0.3f}; 
