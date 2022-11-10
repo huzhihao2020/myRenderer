@@ -1,6 +1,7 @@
 #version 410
 layout(location = 0) out vec4 color;
 in vec3 view_ray;
+in vec2 screen_quad_texcoord;
 
 uniform vec3 camera;
 uniform float exposure;
@@ -8,6 +9,14 @@ uniform vec3 white_point;
 uniform vec3 earth_center;
 uniform vec3 sun_direction;
 uniform vec2 sun_size;
+
+uniform int u_level;
+uniform int u_display_content;
+
+uniform sampler2D transmittance_texture;
+uniform sampler3D scattering_texture;
+uniform sampler3D single_mie_scattering_texture;
+uniform sampler2D irradiance_texture;
 
 const float PI = 3.14159265;
 const float kLengthUnitInMeters = 1000.000000;
@@ -27,6 +36,7 @@ vec3 GetSolarRadiance();
 vec3 GetSkyRadiance(vec3 camera, vec3 view_ray, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSkyRadianceToPoint(vec3 camera, vec3 point, float shadow_length, vec3 sun_direction, out vec3 transmittance);
 vec3 GetSunAndSkyIrradiance(vec3 p, vec3 normal, vec3 sun_direction, out vec3 sky_irradiance);
+vec3 DisplayTransmittance();
 
 float GetSunVisibility(vec3 point, vec3 sun_direction) {
   vec3 p = point - kSphereCenter;
@@ -134,8 +144,21 @@ void main() {
     radiance = mix(radiance, ground_radiance, ground_alpha);
     radiance = mix(radiance, sphere_radiance, sphere_alpha);
 
-    color.rgb = pow(vec3(1.0) - exp(-radiance / white_point * exposure), vec3(1.0 / 2.2));
-    color.a = 1.0;
+    // Final Scene
+    if(u_display_content==0)
+        color.rgb = pow(vec3(1.0) - exp(-radiance / white_point * exposure), vec3(1.0 / 2.2));
+    else if(u_display_content==1)
+        // display transmittance
+        color.rgb = texture(transmittance_texture, screen_quad_texcoord).rgb;
+    else if(u_display_content==2)
+        // display scattering
+        color.rgb = texture(scattering_texture, vec3(screen_quad_texcoord, u_level)).rgb;
+    else if(u_display_content==3)
+        // display single_mie_scattering_texture
+        color.rgb = texture(single_mie_scattering_texture, vec3(screen_quad_texcoord, u_level)).rgb;
+    else if(u_display_content==4)
+        // display irradiance
+        color.rgb = texture(irradiance_texture, screen_quad_texcoord).rgb;
 
-    // color = vec4(view_direction.x, view_direction.y, view_direction.z, 1.0);
+    color.a = 1.0;
 }

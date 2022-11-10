@@ -1,6 +1,8 @@
 #include "GEngine/renderpass/precomputed_atmosphere_pass.h"
 #include "GEngine/render_system.h"
 #include "GEngine/log.h"
+#include "GEngine/editor_ui.h"
+
 #include <fstream>
 #include <memory>
 #include <streambuf>
@@ -1374,33 +1376,6 @@ void GEngine::PrecomputedAtmospherePass::Init() {
     0.0, 0.0, 1.0, 1.0
   };
   glUniformMatrix4fv(glGetUniformLocation(program_->GetShaderID(), "view_from_clip"), 1, true, view_from_clip);
-
-  /* prepare test begin */
-  // std::string v_path("/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/screen_shader_vert.glsl");
-  // std::string f_path("/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/screen_shader_frag.glsl");
-  // shader_ = std::make_shared<Shader>(v_path, f_path);
-  // // shader_->SetInt("screenTexture", model_->transmittance_texture_);
-  // float quadVertices[] = {
-  //   // positions   // texCoords
-  //   -1.0f,  1.0f,  0.0f, 1.0f,
-  //   -1.0f, -1.0f,  0.0f, 0.0f,
-  //    1.0f, -1.0f,  1.0f, 0.0f,
-
-  //   -1.0f,  1.0f,  0.0f, 1.0f,
-  //    1.0f, -1.0f,  1.0f, 0.0f,
-  //    1.0f,  1.0f,  1.0f, 1.0f
-  // };
-  // glGenVertexArrays(1, &screenQuadVAO_);
-  // glGenBuffers(1, &screenQuadVBO_);
-  // glBindVertexArray(screenQuadVAO_);
-  // glBindBuffer(GL_ARRAY_BUFFER, screenQuadVBO_);
-  // glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
-  // glEnableVertexAttribArray(0);
-  // glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-  // glEnableVertexAttribArray(1);
-  // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-  // glBindVertexArray(0);
-  /* prepare test end */
 }
 
 void GEngine::PrecomputedAtmospherePass::Tick() {
@@ -1410,8 +1385,6 @@ void GEngine::PrecomputedAtmospherePass::Tick() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glUseProgram(program_->GetShaderID());
-  
-  // model_->SetProgramUniforms(program_->GetShaderID(), 0, 1, 2, 3);
 
   view_distance_meters_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->distance_;
   view_zenith_angle_radians_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->view_angle_[0];
@@ -1419,6 +1392,9 @@ void GEngine::PrecomputedAtmospherePass::Tick() {
   sun_zenith_angle_radians_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->sun_angle_[0];
   sun_azimuth_angle_radians_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->sun_angle_[1];
   exposure_ = 10.0;
+
+  glUniform1i(glGetUniformLocation(program_->GetShaderID(), "u_level"), CSingleton<CRenderSystem>()->GetOrCreateMainUI()->texture_level_);
+  glUniform1i(glGetUniformLocation(program_->GetShaderID(), "u_display_content"), CSingleton<CRenderSystem>()->GetOrCreateMainUI()->display_content_);
 
   float cos_z = cos(view_zenith_angle_radians_);
   float sin_z = sin(view_zenith_angle_radians_);
