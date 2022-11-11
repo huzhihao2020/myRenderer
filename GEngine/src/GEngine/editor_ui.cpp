@@ -82,7 +82,7 @@ void GEngine::CEditorUI::Tick() {
   if(ImGui::SameLine();ImGui::Button("Animaton3")) {
     animation_ = 3;
   }
-  ImGui::SliderFloat("view distance", &distance_, 7000.0f, 300000.0f);
+  ImGui::SliderFloat("view distance", &distance_, 7000.0f, 1000000.0f);
   ImGui::DragFloat2("view angle", view_angle_, 0.005f, 0.0f, 1.57f);
   ImGui::DragFloat2("sun angle", sun_angle_, 0.005f, -3.0f, 3.0f);
 
@@ -103,7 +103,7 @@ void GEngine::CEditorUI::Tick() {
     display_content_ = 4;
   }
 
-  ImGui::SliderInt("3D texture level", &texture_level_, 0, 50);
+  ImGui::SliderInt("3D texture level", &texture_level_, 0, 31);
 
   ImGui::End();
   // imgui end

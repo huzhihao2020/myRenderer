@@ -191,9 +191,6 @@ class PrecomputedAtmosphereModel {
                                             const std::vector<double> &spectrum, double *r,
                                             double *g, double *b);
 
-    // GLuint NewTexture2d(int width, int height);
-    // GLuint NewTexture3d(int width, int height, int depth, GLenum format, bool half_precision);
-
     static constexpr int kLambdaMin = 360;
     static constexpr int kLambdaMax = 830;
 
@@ -257,7 +254,7 @@ private:
 
   bool use_constant_solar_spectrum_ = false;
   bool use_ozone_ = true;
-  bool use_combined_textures_ = false;
+  bool use_combined_textures_ = false; // combine mie scatter texture to the alpha of scattering_texture_ texture
   bool use_half_precision_ = false;
   Luminance use_luminance_ = Luminance::NONE;
   bool do_white_balance_ = false;

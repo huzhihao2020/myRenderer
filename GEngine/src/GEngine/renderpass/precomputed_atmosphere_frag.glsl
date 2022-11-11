@@ -152,10 +152,10 @@ void main() {
         color.rgb = texture(transmittance_texture, screen_quad_texcoord).rgb;
     else if(u_display_content==2)
         // display scattering
-        color.rgb = texture(scattering_texture, vec3(screen_quad_texcoord, u_level)).rgb;
+        color.rgb = texture(scattering_texture, vec3(screen_quad_texcoord, float(u_level) / 32.0)).rgb;
     else if(u_display_content==3)
         // display single_mie_scattering_texture
-        color.rgb = texture(single_mie_scattering_texture, vec3(screen_quad_texcoord, u_level)).rgb;
+        color.rgb = texture(single_mie_scattering_texture, vec3(screen_quad_texcoord, float(u_level) / 32.0)).rgb;
     else if(u_display_content==4)
         // display irradiance
         color.rgb = texture(irradiance_texture, screen_quad_texcoord).rgb;

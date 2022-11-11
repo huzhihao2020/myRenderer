@@ -13,7 +13,6 @@ const int SCATTERING_TEXTURE_MU_S_SIZE = 32;
 const int SCATTERING_TEXTURE_NU_SIZE = 8;
 const int IRRADIANCE_TEXTURE_WIDTH = 64;
 const int IRRADIANCE_TEXTURE_HEIGHT = 16;
-#define COMBINED_SCATTERING_TEXTURES
 
 #define Length float
 #define Wavelength float
@@ -259,7 +258,7 @@ DimensionlessSpectrum GetTransmittance(IN(AtmosphereParameters) atmosphere,
                DimensionlessSpectrum(1.0));
   }
 }
-// [?] get transmittance (sun under the horizon)
+// cos_theta_h represents the Horizon zenith angle, mu_s represents the Sun zenith angle
 DimensionlessSpectrum GetTransmittanceToSun(IN(AtmosphereParameters) atmosphere,
                                             IN(TransmittanceTexture) transmittance_texture,
                                             Length r, Number mu_s) {

@@ -12,7 +12,6 @@ const int SCATTERING_TEXTURE_MU_S_SIZE = 32;
 const int SCATTERING_TEXTURE_NU_SIZE = 8;
 const int IRRADIANCE_TEXTURE_WIDTH = 64;
 const int IRRADIANCE_TEXTURE_HEIGHT = 16;
-#define COMBINED_SCATTERING_TEXTURES
 
 #define Length float
 #define Wavelength float
