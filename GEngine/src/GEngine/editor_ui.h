@@ -21,8 +21,10 @@ public:
   const int GetAnimaiton() const { return animation_; }
 
   float distance_ = 9000.0f;
+  float distance_factor_ = 1.0f;
   float view_angle_[2] = {1.39f, 0.0f};
   float sun_angle_[2] = {1.2, 0.7};
+  float exposure_ = 10.0f;
 
   // for precomputed atmosphere scattering
   int texture_level_ = 0; 

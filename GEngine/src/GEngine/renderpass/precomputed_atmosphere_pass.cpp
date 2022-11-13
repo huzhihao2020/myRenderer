@@ -1349,12 +1349,12 @@ void GEngine::PrecomputedAtmospherePass::Tick() {
 
   glUseProgram(program_->GetShaderID());
 
-  view_distance_meters_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->distance_;
+  view_distance_meters_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->distance_ * CSingleton<CRenderSystem>()->GetOrCreateMainUI()->distance_factor_;
   view_zenith_angle_radians_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->view_angle_[0];
   view_azimuth_angle_radians_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->view_angle_[1];
   sun_zenith_angle_radians_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->sun_angle_[0];
   sun_azimuth_angle_radians_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->sun_angle_[1];
-  exposure_ = 10.0;
+  exposure_ = CSingleton<CRenderSystem>()->GetOrCreateMainUI()->exposure_;
 
   glUniform1i(glGetUniformLocation(program_->GetShaderID(), "u_level"), CSingleton<CRenderSystem>()->GetOrCreateMainUI()->texture_level_);
   glUniform1i(glGetUniformLocation(program_->GetShaderID(), "u_display_content"), CSingleton<CRenderSystem>()->GetOrCreateMainUI()->display_content_);
@@ -1748,7 +1748,7 @@ void GEngine::PrecomputedAtmosphereModel::Precompute(
   }
 
   // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
-  for (unsigned int scattering_order = 2; scattering_order <= 1; ++scattering_order) {
+  for (unsigned int scattering_order = 2; scattering_order <= num_scattering_orders; ++scattering_order) {
   // for (unsigned int scattering_order = 2; scattering_order <= num_scattering_orders; ++scattering_order) {
     // Compute the scattering density, and store it in
     // delta_scattering_density_texture.
