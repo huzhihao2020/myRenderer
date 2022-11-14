@@ -178,6 +178,7 @@ class PrecomputedAtmosphereModel {
 
     ~PrecomputedAtmosphereModel();
 
+    // default multi-scattering order is 4
     void Init(unsigned int num_scattering_orders = 4);
 
     GLuint shader() const { return atmosphere_shader_; }

@@ -65,10 +65,10 @@ void GEngine::CEditorUI::Tick() {
     GE_INFO("Button Clicked."); 
     test_button_status_ ^= 1;
   }
-  // ImGui::DragFloat3("Test", vec4f_, 0.01f, 0.0f, 1.0f);
-  // ImGui::SliderFloat3("light color", light_color_, 0.0f, 1.0f);
+  
   ImGui::ColorEdit3("Sphere Color", sphere_color_); // color picker
   ImGui::DragFloat4("light (rgbI)", light_color_, 0.001f, 0.0f, 1.0f);
+
 
   if (ImGui::CollapsingHeader("Animation")) {
     // animation
@@ -86,6 +86,7 @@ void GEngine::CEditorUI::Tick() {
     }
   }
 
+  // Precomputed Atmospherical Scattering
   if (ImGui::CollapsingHeader("Precomputed Scattering")) {
     ImGui::SliderFloat("height(Km)", &distance_, 7000.0f, 15000.0f);
     ImGui::SliderFloat("height factor", &distance_factor_, 1.0f, 1000.0f);
@@ -124,23 +125,32 @@ void GEngine::CEditorUI::Tick() {
       view_angle_[0] = view_angle_x;
       view_angle_[1] = view_angle_y;
       sun_angle_[0] = sun_angle_x;
-      sun_angle_[1] = sun_angle_x;
+      sun_angle_[1] = sun_angle_y;
       exposure_ = exposure;
     };
 
-    if (ImGui::Button("Preset1")) {
+    if (ImGui::Button("6:00")) {
+      SetView(7000.0, 1.43, 0.0, 1.57, 1.34, 40.0);
+    }
+    if (ImGui::SameLine(); ImGui::Button("8:00")) {
+      SetView(7000.0, 1.405, 0.0, 1.470, 3.06, 15.0);
+    }
+    if (ImGui::SameLine(); ImGui::Button("10:00")) {
       SetView(9000.0, 1.47, 0.0, 1.3, 3.0, 10.0);
     }
-    if (ImGui::SameLine(); ImGui::Button("Preset2")) {
+    if (ImGui::SameLine(); ImGui::Button("12:00")) {
+      SetView(9000.0, 1.405, 0.0, 0.0, 0.0, 10.0);
+    }
+    if (ImGui::SameLine(); ImGui::Button("17:00")) {
       SetView(9000.0, 1.47, 0.0, 1.564, -3.0, 10.0);
     }
-    if (ImGui::SameLine(); ImGui::Button("Preset3")) {
-      SetView(7000.0, 1.57, 0.0, 1.54, -2.96, 10.0);
+    if (ImGui::SameLine(); ImGui::Button("19:00")) {
+      SetView(9000.0, 1.5, 0.0, 1.628, 1.05, 200.0);
     }
-    if (ImGui::SameLine(); ImGui::Button("Preset4")) {
+    if (ImGui::SameLine(); ImGui::Button("Space1")) {
       SetView(2.7e6, 0.81, 0.0, 1.57, 2.0, 10.0);
     }
-    if (ImGui::SameLine(); ImGui::Button("Preset5")) {
+    if (ImGui::SameLine(); ImGui::Button("Space2")) {
       SetView(1.2e7, 0.0, 0.0, 0.93, -2.0, 10.0);
     }
 
