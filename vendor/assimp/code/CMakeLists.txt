@@ -242,6 +242,7 @@ OPTION(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT "default value of all ASSIMP_BUILD_
 SET(ASSIMP_BUILD_OBJ_IMPORTER TRUE)
 SET(ASSIMP_BUILD_BLEND_IMPORTER TRUE)
 SET(ASSIMP_BUILD_GLTF_IMPORTER TRUE)
+SET(ASSIMP_BUILD_COLLADA_IMPORTER TRUE)
 
 # macro to add the CMake Option ADD_ASSIMP_IMPORTER_<name> which enables compile of loader
 # this way selective loaders can be compiled (reduces filesize + compile time)
