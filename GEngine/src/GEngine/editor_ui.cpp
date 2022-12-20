@@ -156,6 +156,15 @@ void GEngine::CEditorUI::Tick() {
 
     ImGui::SliderInt("3D texture level", &texture_level_, 0, 31);
   }
+
+  if (ImGui::CollapsingHeader("LTC Area Light")) {
+    ImGui::ColorEdit3("AreaLight Color", area_light_color_); // color picker
+    if (ImGui::Button("Default View Pos")) {
+      auto camera = CSingleton<CRenderSystem>()->GetOrCreateMainCamera();
+      camera->SetPosition(glm::vec3(-2.63, 3.47, 6.45));
+      camera->SetFront(glm::vec3(-0.624, -0.307, -0.719));
+    }
+  }
   ImGui::End();
   // imgui end
   ImGui::Render();

@@ -50,7 +50,7 @@ GLvoid GEngine::CApp::RunMainLoop() {
     
     CalculateTime();
     CSingleton<CRenderSystem>()->GetOrCreateMainCamera()->Tick();
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // ticking the render passes
     auto render_passes = CSingleton<CRenderSystem>()->GetRenderPass();
@@ -68,7 +68,6 @@ GLvoid GEngine::CApp::RunMainLoop() {
       }
     }
     
-
     // render the objects
     glm::mat4 model = glm::mat4(1.0f);
     // model = glm::scale(model, glm::vec3(0.1, 0.1, 0.1));
@@ -85,7 +84,6 @@ GLvoid GEngine::CApp::RunMainLoop() {
     if(err!=GL_NO_ERROR) {
       GE_WARN("gl Error {0}", err);
     }
-
     
     glfwPollEvents();
     glfwSwapBuffers(window_);

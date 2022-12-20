@@ -35,7 +35,9 @@ public:
   bool GetCameraStatus() const { return camera_status_; }
   void SetCameraStatus(bool camera_status) { camera_status_ = camera_status; }
   glm::vec3 GetPosition() const { return position_; }
+  void SetPosition(const glm::vec3& pos) { position_ = pos; }
   glm::vec3 GetFront() const { return front_; }
+  void SetFront(const glm::vec3& front) { front_ = front; }
   glm::vec3 GetRight() const { return right_; }
   glm::vec3 GetUp() const { return up_; }
   float GetMoveSpeed() const { return move_speed_; }

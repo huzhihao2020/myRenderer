@@ -609,14 +609,13 @@ IrradianceSpectrum GetIrradiance(
     IN(AtmosphereParameters) atmosphere,
     IN(IrradianceTexture) irradiance_texture,
     Length r, Number mu_s);
-RadianceDensitySpectrum ComputeScatteringDensity(
-    IN(AtmosphereParameters) atmosphere,
-    IN(TransmittanceTexture) transmittance_texture,
-    IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
-    IN(ReducedScatteringTexture) single_mie_scattering_texture,
-    IN(ScatteringTexture) multiple_scattering_texture,
-    IN(IrradianceTexture) irradiance_texture,
-    Length r, Number mu, Number mu_s, Number nu, int scattering_order) {
+RadianceDensitySpectrum ComputeScatteringDensity(IN(AtmosphereParameters) atmosphere,
+                                                 IN(TransmittanceTexture) transmittance_texture,
+                                                 IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
+                                                 IN(ReducedScatteringTexture) single_mie_scattering_texture,
+                                                 IN(ScatteringTexture) multiple_scattering_texture,
+                                                 IN(IrradianceTexture) irradiance_texture,
+                                                 Length r, Number mu, Number mu_s, Number nu, int scattering_order) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu >= -1.0 && mu <= 1.0);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
@@ -630,52 +629,36 @@ RadianceDensitySpectrum ComputeScatteringDensity(
   const int SAMPLE_COUNT = 16;
   const Angle dphi = pi / Number(SAMPLE_COUNT);
   const Angle dtheta = pi / Number(SAMPLE_COUNT);
-  RadianceDensitySpectrum rayleigh_mie =
-      RadianceDensitySpectrum(0.0 * watt_per_cubic_meter_per_sr_per_nm);
+  RadianceDensitySpectrum rayleigh_mie = RadianceDensitySpectrum(0.0 * watt_per_cubic_meter_per_sr_per_nm);
   for (int l = 0; l < SAMPLE_COUNT; ++l) {
     Angle theta = (Number(l) + 0.5) * dtheta;
     Number cos_theta = cos(theta);
     Number sin_theta = sin(theta);
-    bool ray_r_theta_intersects_ground =
-        RayIntersectsGround(atmosphere, r, cos_theta);
+    bool ray_r_theta_intersects_ground = RayIntersectsGround(atmosphere, r, cos_theta);
     Length distance_to_ground = 0.0 * m;
     DimensionlessSpectrum transmittance_to_ground = DimensionlessSpectrum(0.0);
     DimensionlessSpectrum ground_albedo = DimensionlessSpectrum(0.0);
     if (ray_r_theta_intersects_ground) {
-      distance_to_ground =
-          DistanceToBottomAtmosphereBoundary(atmosphere, r, cos_theta);
-      transmittance_to_ground =
-          GetTransmittance(atmosphere, transmittance_texture, r, cos_theta,
-              distance_to_ground, true /* ray_intersects_ground */);
+      distance_to_ground = DistanceToBottomAtmosphereBoundary(atmosphere, r, cos_theta);
+      transmittance_to_ground = GetTransmittance(atmosphere, transmittance_texture, r, cos_theta, distance_to_ground, true /* ray_intersects_ground */);
       ground_albedo = atmosphere.ground_albedo;
     }
     for (int m = 0; m < 2 * SAMPLE_COUNT; ++m) {
       Angle phi = (Number(m) + 0.5) * dphi;
-      vec3 omega_i =
-          vec3(cos(phi) * sin_theta, sin(phi) * sin_theta, cos_theta);
+      vec3 omega_i = vec3(cos(phi) * sin_theta, sin(phi) * sin_theta, cos_theta);
       SolidAngle domega_i = (dtheta / rad) * (dphi / rad) * sin(theta) * sr;
       Number nu1 = dot(omega_s, omega_i);
-      RadianceSpectrum incident_radiance = GetScattering(atmosphere,
-          single_rayleigh_scattering_texture, single_mie_scattering_texture,
-          multiple_scattering_texture, r, omega_i.z, mu_s, nu1,
-          ray_r_theta_intersects_ground, scattering_order - 1);
-      vec3 ground_normal =
-          normalize(zenith_direction * r + omega_i * distance_to_ground);
-      IrradianceSpectrum ground_irradiance = GetIrradiance(
-          atmosphere, irradiance_texture, atmosphere.bottom_radius,
-          dot(ground_normal, omega_s));
-      incident_radiance += transmittance_to_ground *
-          ground_albedo * (1.0 / (PI * sr)) * ground_irradiance;
+      RadianceSpectrum incident_radiance = GetScattering(atmosphere, single_rayleigh_scattering_texture, single_mie_scattering_texture,
+                                                         multiple_scattering_texture, r, omega_i.z, mu_s, nu1,
+                                                         ray_r_theta_intersects_ground, scattering_order - 1);
+      vec3 ground_normal = normalize(zenith_direction * r + omega_i * distance_to_ground);
+      IrradianceSpectrum ground_irradiance = GetIrradiance(atmosphere, irradiance_texture, atmosphere.bottom_radius, dot(ground_normal, omega_s));
+      incident_radiance += transmittance_to_ground * ground_albedo * (1.0 / (PI * sr)) * ground_irradiance;
       Number nu2 = dot(omega, omega_i);
-      Number rayleigh_density = GetProfileDensity(
-          atmosphere.rayleigh_density, r - atmosphere.bottom_radius);
-      Number mie_density = GetProfileDensity(
-          atmosphere.mie_density, r - atmosphere.bottom_radius);
-      rayleigh_mie += incident_radiance * (
-          atmosphere.rayleigh_scattering * rayleigh_density *
-              RayleighPhaseFunction(nu2) +
-          atmosphere.mie_scattering * mie_density *
-              MiePhaseFunction(atmosphere.mie_phase_function_g, nu2)) *
+      Number rayleigh_density = GetProfileDensity(atmosphere.rayleigh_density, r - atmosphere.bottom_radius);
+      Number mie_density = GetProfileDensity(atmosphere.mie_density, r - atmosphere.bottom_radius);
+      rayleigh_mie += incident_radiance * (atmosphere.rayleigh_scattering * rayleigh_density * RayleighPhaseFunction(nu2) +
+          atmosphere.mie_scattering * mie_density * MiePhaseFunction(atmosphere.mie_phase_function_g, nu2)) *
           domega_i;
     }
   }
@@ -737,63 +720,59 @@ RadianceDensitySpectrum ComputeScatteringDensityTexture(
       multiple_scattering_texture, irradiance_texture, r, mu, mu_s, nu,
       scattering_order);
 }
-RadianceSpectrum ComputeMultipleScatteringTexture(
-    IN(AtmosphereParameters) atmosphere,
-    IN(TransmittanceTexture) transmittance_texture,
-    IN(ScatteringDensityTexture) scattering_density_texture,
-    IN(vec3) frag_coord, OUT(Number) nu) {
+RadianceSpectrum ComputeMultipleScatteringTexture(IN(AtmosphereParameters) atmosphere,
+                                                  IN(TransmittanceTexture) transmittance_texture,
+                                                  IN(ScatteringDensityTexture) scattering_density_texture,
+                                                  IN(vec3) frag_coord, OUT(Number) nu) {
   Length r;
   Number mu;
   Number mu_s;
   bool ray_r_mu_intersects_ground;
-  GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, frag_coord,
-      r, mu, mu_s, nu, ray_r_mu_intersects_ground);
-  return ComputeMultipleScattering(atmosphere, transmittance_texture,
-      scattering_density_texture, r, mu, mu_s, nu,
-      ray_r_mu_intersects_ground);
+  GetRMuMuSNuFromScatteringTextureFragCoord(atmosphere, frag_coord, r, mu, mu_s, nu, ray_r_mu_intersects_ground);
+  return ComputeMultipleScattering(atmosphere, transmittance_texture, scattering_density_texture, r, mu, mu_s, nu,
+                                   ray_r_mu_intersects_ground);
 }
-IrradianceSpectrum ComputeDirectIrradiance(
-    IN(AtmosphereParameters) atmosphere,
-    IN(TransmittanceTexture) transmittance_texture,
-    Length r, Number mu_s) {
+
+// compute the direct irradiance from the sun
+// apply approximation when sun is at horizon
+IrradianceSpectrum ComputeDirectIrradiance(IN(AtmosphereParameters) atmosphere,
+                                           IN(TransmittanceTexture) transmittance_texture,
+                                           Length r, Number mu_s) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
   Number alpha_s = atmosphere.sun_angular_radius / rad;
-  Number average_cosine_factor =
-    mu_s < -alpha_s ? 0.0 : (mu_s > alpha_s ? mu_s :
-        (mu_s + alpha_s) * (mu_s + alpha_s) / (4.0 * alpha_s));
-  return atmosphere.solar_irradiance *
-      GetTransmittanceToTopAtmosphereBoundary(
-          atmosphere, transmittance_texture, r, mu_s) * average_cosine_factor;
+  Number average_cosine_factor = mu_s < -alpha_s ? 0.0 
+                                                 : (mu_s > alpha_s ? mu_s 
+                                                                   : (mu_s + alpha_s) * (mu_s + alpha_s) / (4.0 * alpha_s));
+  return atmosphere.solar_irradiance
+         * GetTransmittanceToTopAtmosphereBoundary(atmosphere, transmittance_texture, r, mu_s)
+         * average_cosine_factor;
 }
-IrradianceSpectrum ComputeIndirectIrradiance(
-    IN(AtmosphereParameters) atmosphere,
-    IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
-    IN(ReducedScatteringTexture) single_mie_scattering_texture,
-    IN(ScatteringTexture) multiple_scattering_texture,
-    Length r, Number mu_s, int scattering_order) {
+IrradianceSpectrum ComputeIndirectIrradiance(IN(AtmosphereParameters) atmosphere,
+                                             IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
+                                             IN(ReducedScatteringTexture) single_mie_scattering_texture,
+                                             IN(ScatteringTexture) multiple_scattering_texture,
+                                             Length r, Number mu_s, int scattering_order) {
   assert(r >= atmosphere.bottom_radius && r <= atmosphere.top_radius);
   assert(mu_s >= -1.0 && mu_s <= 1.0);
   assert(scattering_order >= 1);
   const int SAMPLE_COUNT = 32;
   const Angle dphi = pi / Number(SAMPLE_COUNT);
   const Angle dtheta = pi / Number(SAMPLE_COUNT);
-  IrradianceSpectrum result =
-      IrradianceSpectrum(0.0 * watt_per_square_meter_per_nm);
+  IrradianceSpectrum result = IrradianceSpectrum(0.0 * watt_per_square_meter_per_nm);
   vec3 omega_s = vec3(sqrt(1.0 - mu_s * mu_s), 0.0, mu_s);
   for (int j = 0; j < SAMPLE_COUNT / 2; ++j) {
     Angle theta = (Number(j) + 0.5) * dtheta;
     for (int i = 0; i < 2 * SAMPLE_COUNT; ++i) {
       Angle phi = (Number(i) + 0.5) * dphi;
-      vec3 omega =
-          vec3(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
+      vec3 omega = vec3(cos(phi) * sin(theta), sin(phi) * sin(theta), cos(theta));
       SolidAngle domega = (dtheta / rad) * (dphi / rad) * sin(theta) * sr;
       Number nu = dot(omega, omega_s);
       result += GetScattering(atmosphere, single_rayleigh_scattering_texture,
-          single_mie_scattering_texture, multiple_scattering_texture,
-          r, omega.z, mu_s, nu, false /* ray_r_theta_intersects_ground */,
-          scattering_order) *
-              omega.z * domega;
+                              single_mie_scattering_texture, multiple_scattering_texture,
+                              r, omega.z, mu_s, nu, false /* ray_r_theta_intersects_ground */,
+                              scattering_order) *
+                              omega.z * domega;
     }
   }
   return result;
@@ -829,19 +808,16 @@ IrradianceSpectrum ComputeDirectIrradianceTexture(
   GetRMuSFromIrradianceTextureUv(atmosphere, frag_coord / IRRADIANCE_TEXTURE_SIZE, r, mu_s);
   return ComputeDirectIrradiance(atmosphere, transmittance_texture, r, mu_s);
 }
-IrradianceSpectrum ComputeIndirectIrradianceTexture(
-    IN(AtmosphereParameters) atmosphere,
-    IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
-    IN(ReducedScatteringTexture) single_mie_scattering_texture,
-    IN(ScatteringTexture) multiple_scattering_texture,
-    IN(vec2) frag_coord, int scattering_order) {
+IrradianceSpectrum ComputeIndirectIrradianceTexture(IN(AtmosphereParameters) atmosphere,
+                                                    IN(ReducedScatteringTexture) single_rayleigh_scattering_texture,
+                                                    IN(ReducedScatteringTexture) single_mie_scattering_texture,
+                                                    IN(ScatteringTexture) multiple_scattering_texture,
+                                                    IN(vec2) frag_coord, int scattering_order) {
   Length r;
   Number mu_s;
-  GetRMuSFromIrradianceTextureUv(
-      atmosphere, frag_coord / IRRADIANCE_TEXTURE_SIZE, r, mu_s);
-  return ComputeIndirectIrradiance(atmosphere,
-      single_rayleigh_scattering_texture, single_mie_scattering_texture,
-      multiple_scattering_texture, r, mu_s, scattering_order);
+  GetRMuSFromIrradianceTextureUv(atmosphere, frag_coord / IRRADIANCE_TEXTURE_SIZE, r, mu_s);
+  return ComputeIndirectIrradiance(atmosphere, single_rayleigh_scattering_texture, single_mie_scattering_texture,
+                                   multiple_scattering_texture, r, mu_s, scattering_order);
 }
 IrradianceSpectrum GetIrradiance(
     IN(AtmosphereParameters) atmosphere,
@@ -1078,14 +1054,13 @@ uniform sampler2D irradiance_texture;
 uniform int scattering_order;
 uniform int layer;
 void main() {
-  scattering_density = ComputeScatteringDensityTexture(
-      ATMOSPHERE, transmittance_texture,
-      single_rayleigh_scattering_texture,
-      single_mie_scattering_texture,
-      multiple_scattering_texture,
-      irradiance_texture,
-      vec3(gl_FragCoord.xy, layer + 0.5),
-      scattering_order);
+  scattering_density = ComputeScatteringDensityTexture(ATMOSPHERE, transmittance_texture,
+                                                       single_rayleigh_scattering_texture,
+                                                       single_mie_scattering_texture,
+                                                       multiple_scattering_texture,
+                                                       irradiance_texture,
+                                                       vec3(gl_FragCoord.xy, layer + 0.5),
+                                                       scattering_order);
 })";
 
 const std::string kComputeIndirectIrradianceShader = R"(
@@ -1112,10 +1087,10 @@ uniform sampler3D scattering_density_texture;
 uniform int layer;
 void main() {
   float nu;
-  delta_multiple_scattering = ComputeMultipleScatteringTexture(
-      ATMOSPHERE, transmittance_texture,
-      scattering_density_texture,
-      vec3(gl_FragCoord.xy, layer + 0.5), nu);
+  delta_multiple_scattering = ComputeMultipleScatteringTexture(ATMOSPHERE,
+                                                               transmittance_texture,
+                                                               scattering_density_texture,
+                                                               vec3(gl_FragCoord.xy, layer + 0.5), nu);
   scattering = vec4(luminance_from_radiance * delta_multiple_scattering.rgb / RayleighPhaseFunction(nu), 0.0);
 })";
 
@@ -1300,7 +1275,9 @@ void GEngine::PrecomputedAtmospherePass::Init() {
       atmosphere::demo_glsl;
 
   // program_ = Shader::CreateProgramFromSource(atmosphere::kDemoVertexShader, fragment_shader_str);
-  program_ = Shader::CreateAtmosphereProgram("/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/precomputed_atmosphere_vert.glsl", "/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/precomputed_atmosphere_frag.glsl", "/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/atmosphere_shader_frag2.glsl");
+  program_ = Shader::CreateAtmosphereProgram("/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/precomputed_atmosphere_vert.glsl",
+                                             "/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/precomputed_atmosphere_frag.glsl",
+                                             "/Users/huzhihao/Code/Engine/myRenderer/GEngine/src/GEngine/renderpass/atmosphere_shader_frag2.glsl");
 
   glUseProgram(program_->GetShaderID());
 //  model_->SetProgramUniforms(program_->GetShaderID(), 0, 1, 2);
@@ -1703,6 +1680,8 @@ void GEngine::PrecomputedAtmosphereModel::Precompute(
     GL_COLOR_ATTACHMENT2,
     GL_COLOR_ATTACHMENT3
   };
+
+  // to accumulate the color in irradiance_texture_ and scattering_texture_
   glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
   glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE, GL_ONE);
 
@@ -1749,9 +1728,8 @@ void GEngine::PrecomputedAtmosphereModel::Precompute(
 
   // Compute the 2nd, 3rd and 4th order of scattering, in sequence.
   for (unsigned int scattering_order = 2; scattering_order <= num_scattering_orders; ++scattering_order) {
-  // for (unsigned int scattering_order = 2; scattering_order <= num_scattering_orders; ++scattering_order) {
-    // Compute the scattering density, and store it in
-    // delta_scattering_density_texture.
+    // Compute the scattering density, and store it in delta_scattering_density_texture.
+    // don't forget to reset GL_COLOR_ATTACHMENT1~3
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, delta_scattering_density_texture, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
@@ -1770,8 +1748,8 @@ void GEngine::PrecomputedAtmosphereModel::Precompute(
       DrawQuad({}, full_screen_quad_vao_);
     }
 
-    // Compute the indirect irradiance, store it in delta_irradiance_texture and
-    // accumulate it in irradiance_texture_.
+    // Compute the indirect irradiance, update it in delta_irradiance_texture
+    // and accumulate it in irradiance_texture_.
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, delta_irradiance_texture, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, irradiance_texture_, 0);
     glDrawBuffers(2, kDrawBuffers);
@@ -1784,9 +1762,8 @@ void GEngine::PrecomputedAtmosphereModel::Precompute(
     compute_indirect_irradiance.BindInt("scattering_order", scattering_order - 1);
     DrawQuad({false, true}, full_screen_quad_vao_);
 
-    // Compute the multiple scattering, store it in
-    // delta_multiple_scattering_texture, and accumulate it in
-    // scattering_texture_.
+    // Compute the multiple scattering, update it in delta_multiple_scattering_texture
+    // and accumulate it in scattering_texture_.
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, delta_multiple_scattering_texture, 0);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, scattering_texture_, 0);
     glDrawBuffers(2, kDrawBuffers);
@@ -1800,6 +1777,7 @@ void GEngine::PrecomputedAtmosphereModel::Precompute(
       DrawQuad({false, true}, full_screen_quad_vao_);
     }
   }
+
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, 0, 0);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, 0, 0);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, 0, 0);
